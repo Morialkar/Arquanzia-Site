@@ -47,16 +47,24 @@ fix_permissions() {
     echo "✅ Permissions fixed"
 }
 
+run_remote_cache_clear() {
+    ssh "$REMOTE_HOST" "cd $REMOTE_DIR && $PHP_BIN artisan view:clear && $PHP_BIN artisan cache:clear" > /dev/null 2>&1
+    echo "🧹 Cache cleared"
+}
+
 do_sync() {
     rsync -avz --delete $EXCLUDE_ARGS "$LOCAL_DIR/" "$REMOTE_HOST:$REMOTE_DIR/"
-    
+
+    # Always clear view/app cache after sync so compiled templates are fresh
+    run_remote_cache_clear
+
     # Check if composer.lock changed
     CURRENT_HASH=$(md5 -q "$LOCAL_DIR/composer.lock" 2>/dev/null || echo "")
     if [ -n "$CURRENT_HASH" ] && [ "$CURRENT_HASH" != "$LAST_COMPOSER_HASH" ]; then
         LAST_COMPOSER_HASH="$CURRENT_HASH"
         run_remote_composer
     fi
-    
+
     # Check if migrations trigger file exists
     if [ -f "$LOCAL_DIR/.run-migrations" ]; then
         rm "$LOCAL_DIR/.run-migrations"
