@@ -78,10 +78,55 @@ class MarkdownHelper
 
         $processed = implode("\n", $result);
         
+        // Process [[wikilinks]] before markdown rendering
+        $processed = self::processWikilinks($processed);
+        
+        \Log::debug('MarkdownHelper processed', ['has_wikilinks' => str_contains($processed, '[[')]);
+        
         // Render markdown
         $html = \Illuminate\Support\Str::markdown($processed);
         
         // Preserve line breaks
         return nl2br($html);
+    }
+
+    protected static function processWikilinks(string $text): string
+    {
+        try {
+            return preg_replace_callback('/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/', function ($matches) {
+                $term = trim($matches[1]);
+                $displayText = isset($matches[2]) ? trim($matches[2]) : $term;
+
+                $escape = fn (?string $value) => $value !== null ? e($value) : null;
+
+                try {
+                    $target = \App\Models\Wikilink::resolveTarget($term);
+                    
+                    if ($target && isset($target['url'])) {
+                        $url = $escape($target['url']);
+                        $titleAttr = $escape($target['title'] ?? $displayText);
+                        $teaserAttr = $target['teaser'] ? $escape(strip_tags($target['teaser'])) : null;
+                        $displayEscaped = $escape($displayText);
+
+                        $dataAttrs = ' data-wikilink-term="' . ($titleAttr ?? '') . '"';
+                        if ($teaserAttr) {
+                            $dataAttrs .= ' data-wikilink-teaser="' . $teaserAttr . '"';
+                        }
+
+                        return sprintf(
+                            '<a href="%s" class="wikilink-resolved"%s>%s</a>',
+                            $url,
+                            $dataAttrs,
+                            $displayEscaped
+                        );
+                    }
+                } catch (\Throwable $e) {
+                }
+                
+                return $escape($displayText);
+            }, $text);
+        } catch (\Exception $e) {
+            return preg_replace('/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/', '$1', $text);
+        }
     }
 }
