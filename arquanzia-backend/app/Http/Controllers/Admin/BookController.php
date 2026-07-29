@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\PostMedia;
-use App\Services\BookExportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -104,8 +103,7 @@ class BookController extends Controller
 
         $media = PostMedia::create([
             'filename' => $filename,
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
+            'mime' => $file->getMimeType(),
         ]);
 
         return $media->id;

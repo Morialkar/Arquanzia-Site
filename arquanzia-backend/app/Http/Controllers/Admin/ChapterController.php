@@ -40,6 +40,7 @@ class ChapterController extends Controller
             'order_index' => $request->input('order_index'),
             'content_md' => $request->input('content_md'),
             'is_published' => $request->boolean('is_published'),
+            'is_public' => true,
             'published_at' => $request->input('published_at'),
         ]);
 
@@ -70,12 +71,17 @@ class ChapterController extends Controller
         $isNowAvailable = $nowPublished && (!$publishedAt || now()->gte($publishedAt));
 
         $chapter->update([
-            'title' => $request->input('title'),
-            'slug' => $slug,
-            'order_index' => $request->input('order_index'),
-            'content_md' => $request->input('content_md'),
-            'is_published' => $nowPublished,
-            'published_at' => $publishedAt,
+            'title'                    => $request->input('title'),
+            'slug'                     => $slug,
+            'order_index'              => $request->input('order_index'),
+            'content_md'               => $request->input('content_md'),
+            'is_published'             => $nowPublished,
+            'is_public'                => true,
+            'published_at'             => $publishedAt,
+            'promo_banner_enabled'     => $request->boolean('promo_banner_enabled'),
+            'promo_banner_text'        => $request->input('promo_banner_text'),
+            'promo_banner_button_label' => $request->input('promo_banner_button_label'),
+            'promo_banner_button_url'  => $request->input('promo_banner_button_url'),
         ]);
 
         // Trigger deliveries and notifications if chapter just became available

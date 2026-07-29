@@ -19,11 +19,16 @@ class Chapter extends Model
         'content_md',
         'is_published',
         'published_at',
+        'promo_banner_enabled',
+        'promo_banner_text',
+        'promo_banner_button_label',
+        'promo_banner_button_url',
     ];
 
     protected $casts = [
-        'is_published' => 'boolean',
-        'published_at' => 'datetime',
+        'is_published'        => 'boolean',
+        'published_at'        => 'datetime',
+        'promo_banner_enabled' => 'boolean',
     ];
 
     public function book(): BelongsTo
@@ -47,15 +52,6 @@ class Chapter extends Model
     public function isComingSoon(): bool
     {
         return !$this->is_published || ($this->published_at && $this->published_at->isFuture());
-    }
-
-    public function scopePublished($query)
-    {
-        return $query->where('is_published', true)
-            ->where(function ($q) {
-                $q->whereNull('published_at')
-                  ->orWhere('published_at', '<=', now());
-            });
     }
 
     public function scopeVisible($query)
