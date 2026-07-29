@@ -1,15 +1,16 @@
 # Plan de reprise — Arquanzia
 
-État de départ : la refonte « site de contenu public » est versionnée (16 commits sur `main`,
-non poussés). Ce document couvre ce qui reste à faire, par lots ordonnés.
+La refonte « site de contenu public » est versionnée sur `main`, pas encore poussée — le
+dépôt distant doit changer (lot 3.3). Ce document couvre ce qui reste à faire, par lots
+ordonnés. Les lots sont marqués au fur et à mesure.
 
 ---
 
-## Lot 0 — Correctifs bloquants
+## Lot 0 — Correctifs bloquants ✅ fait (commit `b849172`)
 
-À faire avant tout le reste : ce sont des bugs en production aujourd'hui.
+Sauf 0.5, qui est une variable d'environnement à changer sur le serveur — voir ci-dessous.
 
-### 0.1 — `/admin/users/{id}` renvoie une erreur 500
+### 0.1 — `/admin/users/{id}` renvoie une erreur 500 — corrigé
 
 `Admin\UserController::show()` ne passe que `$user` à la vue, mais
 `resources/views/admin/users/show.blade.php` :
@@ -25,7 +26,7 @@ non poussés). Ce document couvre ce qui reste à faire, par lots ordonnés.
 Correctif : réécrire la vue pour n'afficher que ce qui existe encore (identité, courriel,
 pseudo, date de création, publications). Il ne reste aucune action de modération à proposer.
 
-### 0.2 — La déconnexion admin ne déconnecte pas
+### 0.2 — La déconnexion admin ne déconnecte pas — corrigé
 
 `Admin\AuthController::logout()` oublie `admin_email` et `admin_role`, mais laisse `user_id`
 en session. Or `AdminAuth::handle()` re-promeut automatiquement tout `user_id` présent dans
@@ -33,38 +34,40 @@ l'allowlist. Résultat : après « déconnexion », un simple retour sur `/admin
 
 Correctif : `$request->session()->invalidate()` + `regenerateToken()`.
 
-### 0.3 — Fixation de session à la connexion
+### 0.3 — Fixation de session à la connexion — corrigé
 
 `consumeMagicLink()` écrit dans la session sans la régénérer. Un identifiant de session
 obtenu avant la connexion reste valide après. Correctif : `session()->regenerate()` avant
 d'écrire `admin_email`.
 
-### 0.4 — Fuite d'exceptions vers le public
+### 0.4 — Fuite d'exceptions vers le public — corrigé
 
 `DownloadController::downloadBook()` et `downloadChapter()` renvoient `$e->getMessage()` en
 JSON avec un statut 500. Chemins serveur, requêtes SQL et détails d'implémentation exposés à
 n'importe quel visiteur. Correctif : journaliser l'exception, renvoyer un message neutre.
 
-### 0.5 — Vérifier `APP_DEBUG` sur le serveur
+### 0.5 — Vérifier `APP_DEBUG` sur le serveur — ⚠️ à faire par Naomi
 
 Le `.env` local porte `APP_ENV=production` avec `APP_DEBUG=true` et `LOG_LEVEL=debug`. Le
 `.env` n'est pas synchronisé, donc l'état du serveur est inconnu — **à vérifier en premier**.
 En debug, une page d'erreur expose la configuration, les variables d'environnement et le code.
 
-### 0.6 — Contenu d'encyclopédie inaccessible
+### 0.6 — Visibilité de l'encyclopédie — corrigé
 
-`ViewerResolver::resolve()` retourne toujours `viewer_tier => 'public'`. Or `SearchController`
-et `EncyclopediaController` filtrent sur `visibility === 'public'` sauf pour les paliers
-`reader`/`vip_reader`, qui ne sont plus jamais attribués. Conséquence : **tout nœud dont la
-visibilité n'est pas `public` est invisible pour tout le monde, y compris pour toi**.
+Correction de l'audit initial : le diagnostic « invisible pour tout le monde » était faux.
+Les pages publiques de l'encyclopédie ne filtraient **pas** sur `visibility` — seuls
+`SearchController`, `SitemapController` et `HomepageController` le faisaient. Un nœud
+« reader » était donc lisible par URL directe et listé dans l'index, mais absent des surfaces
+de découverte. C'était une incohérence, et une fuite dans le sens inverse de celui annoncé.
 
-Décision prise : plus de login lecteur, tout est en lecture publique. La seule chose qui peut
-bloquer un visiteur est le statut de publication d'un livre ou d'un chapitre.
+Corrigé : l'énumération `visibility` (`public`/`reader`) est remplacée par un booléen
+`is_published`, aligné sur les livres et chapitres. Les pages publiques le respectent
+désormais, et un brouillon rend tout son sous-arbre inaccessible, URL directe comprise.
 
-Correctif : `visibility` devient un simple brouillon/publié sur les nœuds d'encyclopédie,
-aligné sur le `is_published` des livres et chapitres. Retirer partout les conditions sur
-`viewer_tier`, `is_banned`, `is_logged_in`, et supprimer `ViewerResolver` — il ne fait plus
-rien d'utile. Voir lot 4 pour le nettoyage complet.
+**Report des données** : les nœuds `public` deviennent publiés, les nœuds `reader` deviennent
+des brouillons. Ces derniers étaient déjà hors recherche, sitemap et accueil, donc rien n'est
+publié de nouveau — mais si certains d'entre eux devaient être visibles, il faut les repasser
+en publié depuis le back-office, où ils portent un badge « Brouillon ».
 
 ---
 
@@ -270,12 +273,16 @@ mobile, JavaScript. À éclater en composants.
 
 ### 5.3 — Code mort
 
-- `resources/views/admin/moderation/` et `resources/views/admin/delivery/` : plus aucune
-  route n'y mène, et elles référencent des routes supprimées.
-- `resources/views/components/access/` : six composants d'entitlements et de livraison,
-  orphelins, dont trois appellent des routes inexistantes.
-- `app/Console/Commands/DispatchChapterDeliveries.php` : le service qu'elle appelait a été
-  supprimé.
+Retiré avec le lot 0, ces fichiers étant la cause même du 500 de la fiche utilisateur :
+`resources/views/admin/moderation/`, `resources/views/admin/delivery/`,
+`resources/views/components/access/` (six composants orphelins),
+`app/Console/Commands/DispatchChapterDeliveries.php`, et le doublon jamais utilisé
+`resources/views/components/admin/encyclopedia/form.blade.php`. Plus aucune vue du projet ne
+référence une route inexistante — vérifié en comparant les `route('…')` du code à la liste
+des routes déclarées.
+
+Reste à traiter :
+
 - `arquanzia-backend/.run-migration` : fichier vide versionné, alors que `sync-watch.sh`
   cherche `.run-migrations` (pluriel). L'un des deux est un vestige.
 - Migrations mal datées : `2024_01_15_000002_create_printers_table.php` a été écrite bien
