@@ -14,8 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
-            'shopify.proxy' => \App\Http\Middleware\VerifyShopifyProxy::class,
-            'shopify.webhook' => \App\Http\Middleware\VerifyShopifyWebhook::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
