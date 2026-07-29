@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\EntitlementState;
 use App\Models\PageView;
-use App\Models\ReadingProgress;
 use App\Models\User;
 use Illuminate\View\View;
 
@@ -15,8 +13,6 @@ class AnalyticsController extends Controller
     {
         $stats = [
             'total_users' => User::count(),
-            'active_readers' => EntitlementState::where('type', 'reader')->where('ends_at', '>', now())->count(),
-            'active_vips' => EntitlementState::where('type', 'vip')->where('ends_at', '>', now())->count(),
             'resume_rate' => PageView::getReadingResumeRate(30),
         ];
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminAllowlist;
 use App\Models\AuditLog;
 use App\Models\MagicLink;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -72,10 +73,38 @@ class AuthController extends Controller
         $request->session()->put('admin_email', $link->email);
         $request->session()->put('admin_role', AdminAllowlist::getRole($link->email));
 
+        $user = $this->findOrCreateUserByEmail($link->email);
+        $request->session()->put('user_id', $user->id);
+
         AuditLog::log('admin.login.success', $link->email, [], $request->ip());
 
         return redirect()->route('admin.dashboard');
     }
+
+    protected function findOrCreateUserByEmail(string $email): User
+    {
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        $baseHandle = 'user_' . substr(md5($email), 0, 8);
+        $handle = $baseHandle;
+        $suffix = 1;
+
+        while (User::where('handle', $handle)->exists()) {
+            $handle = $baseHandle . '_' . $suffix;
+            $suffix++;
+        }
+
+        return User::create([
+            'email' => $email,
+            'handle' => $handle,
+        ]);
+    }
+
+
 
     public function logout(Request $request): RedirectResponse
     {

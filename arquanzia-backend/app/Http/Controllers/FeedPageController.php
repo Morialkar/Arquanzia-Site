@@ -16,26 +16,14 @@ class FeedPageController extends Controller
     public function index(Request $request): View
     {
         $context = $this->viewerResolver->resolve($request);
-        $viewer = $request->query('viewer') ?? $context['viewer_tier'];
 
-        if (!in_array($viewer, ['public', 'connected', 'vip', 'reader', 'vip_reader'])) {
-            $viewer = $context['viewer_tier'];
-        }
-
-        // Get pinned post for feed section
-        $pinnedPost = Post::with(['media', 'reactions'])
+        $pinnedPost = Post::with('media')
             ->where('is_pinned', true)
             ->where('pinned_section', 'feed')
             ->first();
 
-        $query = Post::with(['media', 'reactions'])
-            ->orderBy('created_at', 'desc');
+        $query = Post::with('media')->orderBy('created_at', 'desc');
 
-        if ($context['is_banned']) {
-            $query->where('audience', 'public');
-        }
-
-        // Exclude pinned post from regular list
         if ($pinnedPost) {
             $query->where('id', '!=', $pinnedPost->id);
         }
@@ -45,7 +33,6 @@ class FeedPageController extends Controller
         return view('feed.index', [
             'posts' => $posts,
             'pinnedPost' => $pinnedPost,
-            'viewer' => $viewer,
             'context' => $context,
         ]);
     }
@@ -53,23 +40,18 @@ class FeedPageController extends Controller
     public function show(Request $request, Post $post): View
     {
         $context = $this->viewerResolver->resolve($request);
-        $viewer = $request->query('viewer') ?? $context['viewer_tier'];
 
-        if (!in_array($viewer, ['public', 'connected', 'vip', 'reader', 'vip_reader'])) {
-            $viewer = $context['viewer_tier'];
-        }
+        $post->load('media');
 
-        if ($context['is_banned'] && $post->audience !== 'public') {
-            abort(403, 'Accès refusé');
-        }
-
-        $post->load(['media', 'reactions', 'comments' => function ($q) {
-            $q->with('user:id,handle')->limit(50);
-        }]);
+        $firstMedia = $post->media->first();
+        $ogImage = $firstMedia ? route('media.show', $firstMedia->id) : null;
 
         return view('feed.show', [
             'post' => $post,
-            'viewer' => $viewer,
+            'context' => $context,
+            'ogTitle' => $post->title . ' — Arquanzia',
+            'ogDescription' => $post->preview_text ? \Illuminate\Support\Str::limit(strip_tags($post->preview_text), 160) : null,
+            'ogImage' => $ogImage,
         ]);
     }
 }

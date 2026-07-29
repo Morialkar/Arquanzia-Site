@@ -1,27 +1,38 @@
 <x-layouts.admin title="Audit - Admin">
-    <h1 class="font-serif text-2xl font-bold text-arq-forest mb-6">📋 Journal d'audit</h1>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-arq-bark/50 dark:text-arq-mint/60">Système</p>
+            <h1 class="font-serif text-3xl font-semibold text-arq-forest dark:text-arq-mint">📋 Journal d'audit</h1>
+        </div>
+        <p class="text-sm text-arq-bark/70 dark:text-arq-mint/70">Historique des actions administrateur et systèmes.</p>
+    </div>
 
-    <div class="bg-arq-parchment rounded-lg shadow-sm border">
-        <div class="divide-y">
+    <div class="rounded-2xl border border-arq-amber/30 bg-arq-parchment/90 shadow-parchment dark:bg-arq-night-card dark:border-arq-mint/20">
+        <div class="divide-y divide-arq-amber/20 dark:divide-arq-mint/20">
             @forelse($logs as $log)
                 <div class="p-4">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <span class="font-medium text-arq-ink">{{ $log->action }}</span>
-                            <span class="text-arq-bark text-sm ml-2">par {{ $log->actor_email ?? 'Système' }}</span>
+                            <span class="font-semibold text-arq-ink dark:text-arq-mint">{{ $log->action }}</span>
+                            <span class="text-arq-bark/70 dark:text-arq-mint/70 text-sm ml-2">par {{ $log->actor_email ?? 'Système' }}</span>
                         </div>
-                        <span class="text-arq-bark/40 text-xs">{{ $log->created_at->format('d/m/Y H:i') }}</span>
+                        <span class="text-arq-bark/50 dark:text-arq-mint/50 text-xs">{{ $log->created_at->format('d/m/Y H:i') }}</span>
                     </div>
                     @if($log->meta)
-                        <div class="mt-2 text-xs text-arq-bark bg-arq-parchment-dark rounded p-2">
-                            @foreach($log->meta as $key => $value)
-                                <span class="inline-block mr-3"><strong>{{ $key }}:</strong> {{ is_array($value) ? json_encode($value) : $value }}</span>
-                            @endforeach
+                        <div class="mt-3 text-xs text-arq-bark/80 dark:text-arq-mint/80 bg-arq-parchment-dark/80 dark:bg-arq-night rounded-xl p-3 border border-arq-amber/20 dark:border-arq-mint/20">
+                            <div class="flex flex-wrap gap-3">
+                                @foreach($log->meta as $key => $value)
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-white/60 dark:bg-white/5 px-3 py-1">
+                                        <strong class="uppercase tracking-wide text-[0.65rem] text-arq-bark/70 dark:text-arq-mint/70">{{ $key }}</strong>
+                                        <span class="text-arq-ink dark:text-arq-mint">{{ is_array($value) ? json_encode($value) : $value }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
             @empty
-                <div class="p-8 text-center text-arq-bark">Aucun log</div>
+                <div class="p-8 text-center text-arq-bark/70 dark:text-arq-mint/70">Aucun log</div>
             @endforelse
         </div>
     </div>

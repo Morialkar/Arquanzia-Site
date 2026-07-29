@@ -19,8 +19,8 @@ class SettingsController extends Controller
         $siteName = SiteSetting::getSiteName();
 
         return view('admin.settings.index', [
-            'logoPath' => $logoPath,
-            'siteName' => $siteName,
+            'logoPath'             => $logoPath,
+            'siteName'             => $siteName,
         ]);
     }
 

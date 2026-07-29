@@ -11,14 +11,9 @@ class MediaController extends Controller
 {
     public function show(Request $request, PostMedia $media): StreamedResponse
     {
-        $unlocked = $request->boolean('unlocked', false);
-
-        // Support both post media (original_path/locked_path) and standalone media (filename)
-        if ($media->filename) {
-            $path = 'media/original/' . $media->filename;
-        } else {
-            $path = $unlocked ? $media->original_path : $media->locked_path;
-        }
+        $path = $media->filename
+            ? 'media/original/' . $media->filename
+            : $media->original_path;
 
         if (!$path || !Storage::disk('local')->exists($path)) {
             abort(404);

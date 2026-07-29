@@ -2,157 +2,87 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AdminAllowlist;
 use App\Models\Book;
 use App\Models\Chapter;
-use App\Models\Favorite;
-use App\Models\ReadingProgress;
-use App\Services\ViewerResolver;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class LibraryController extends Controller
 {
-    public function __construct(
-        protected ViewerResolver $viewerResolver
-    ) {}
-
-    public function index(Request $request): View
+    public function index(): View
     {
-        $context = $this->viewerResolver->resolve($request);
+        $books = Book::published()->with('cover')->orderBy('created_at', 'desc')->get();
 
-        if ($context['is_banned']) {
-            abort(404);
-        }
-
-        $isAdmin = $context['user'] && AdminAllowlist::isAllowed($context['user']->email);
-
-        $query = Book::with('cover')->orderBy('created_at', 'desc');
-        
-        if (!$isAdmin) {
-            $query->published();
-        }
-
-        $books = $query->get();
-
-        return view('library.index', [
-            'books' => $books,
-            'context' => $context,
-            'isAdmin' => $isAdmin,
-        ]);
+        return view('library.index', ['books' => $books]);
     }
 
-    public function showBook(Request $request, string $slug): View
+    public function showBook(string $slug): View|RedirectResponse
     {
-        $context = $this->viewerResolver->resolve($request);
-        $book = Book::where('slug', $slug)->with(['cover', 'chapters', 'files'])->firstOrFail();
+        $book = Book::published()->where('slug', $slug)->with(['cover', 'chapters', 'files'])->firstOrFail();
 
-        $isAdmin = $context['user'] && AdminAllowlist::isAllowed($context['user']->email);
+        $publishedChapters = $book->chapters()->where('is_published', true)->get();
 
-        if (!$book->is_published && !$isAdmin) {
-            abort(404);
+        if ($publishedChapters->count() === 1) {
+            $solo = $publishedChapters->first();
+            if (!$solo->isComingSoon()) {
+                return redirect()->route('library.chapter', [$book->slug, $solo->slug]);
+            }
         }
 
-        $hasAccess = $isAdmin || in_array($context['viewer_tier'], ['reader', 'vip_reader']);
-        
-        $readingProgress = null;
-        $isFavorite = false;
-        if ($context['user']) {
-            $readingProgress = ReadingProgress::getForUser($context['user']->id, $book->id);
-            $isFavorite = Favorite::isFavorite($context['user']->id, 'book', $book->id);
-        }
+        $ogImage = $book->cover ? route('media.show', $book->cover->id) : null;
+        $ogDescription = $book->description_md
+            ? \Illuminate\Support\Str::limit(strip_tags(\App\Helpers\MarkdownHelper::render($book->description_md)), 160)
+            : null;
 
         return view('library.book', [
             'book' => $book,
-            'context' => $context,
-            'hasAccess' => $hasAccess,
-            'isAdmin' => $isAdmin,
-            'readingProgress' => $readingProgress,
-            'isFavorite' => $isFavorite,
+            'ogTitle' => $book->title . ' — Bibliothèque · Arquanzia',
+            'ogDescription' => $ogDescription,
+            'ogImage' => $ogImage,
         ]);
     }
 
-    public function showChapter(Request $request, string $bookSlug, string $chapterSlug): View
+    public function showChapter(string $bookSlug, string $chapterSlug): View
     {
-        $context = $this->viewerResolver->resolve($request);
-        
-        $book = Book::where('slug', $bookSlug)->firstOrFail();
+        $book = Book::published()->where('slug', $bookSlug)->firstOrFail();
+
         $chapter = Chapter::where('book_id', $book->id)
             ->where('slug', $chapterSlug)
+            ->where('is_published', true)
             ->with('files')
             ->firstOrFail();
 
-        $isAdmin = $context['user'] && AdminAllowlist::isAllowed($context['user']->email);
-
-        if ((!$book->is_published || !$chapter->is_published) && !$isAdmin) {
+        if ($chapter->isComingSoon()) {
             abort(404);
         }
 
-        $hasAccess = $isAdmin || in_array($context['viewer_tier'], ['reader', 'vip_reader']);
-        $isComingSoon = !$isAdmin && $chapter->isComingSoon();
-
-        // Track reading progress
-        if ($context['user'] && $hasAccess && !$isComingSoon) {
-            ReadingProgress::updateProgress($context['user']->id, $book->id, $chapter->id);
-        }
-
-        // Get prev/next chapters
         $prevChapter = Chapter::where('book_id', $book->id)
             ->where('order_index', '<', $chapter->order_index)
+            ->where('is_published', true)
             ->orderBy('order_index', 'desc')
             ->first();
-            
+
         $nextChapter = Chapter::where('book_id', $book->id)
             ->where('order_index', '>', $chapter->order_index)
+            ->where('is_published', true)
             ->orderBy('order_index', 'asc')
             ->first();
-        
-        // Filter unpublished for non-admins
-        if (!$isAdmin) {
-            if ($prevChapter && (!$prevChapter->is_published || $prevChapter->isComingSoon())) {
-                $prevChapter = null;
-            }
-            if ($nextChapter && (!$nextChapter->is_published || $nextChapter->isComingSoon())) {
-                $nextChapter = null;
-            }
-        }
+
+        if ($prevChapter?->isComingSoon()) $prevChapter = null;
+        if ($nextChapter?->isComingSoon()) $nextChapter = null;
+
+        $book->load('cover');
+        $ogImage = $book->cover ? route('media.show', $book->cover->id) : null;
 
         return view('library.chapter', [
-            'book' => $book,
-            'chapter' => $chapter,
-            'context' => $context,
-            'hasAccess' => $hasAccess,
-            'isComingSoon' => $isComingSoon,
-            'isAdmin' => $isAdmin,
+            'book'        => $book,
+            'chapter'     => $chapter,
             'prevChapter' => $prevChapter,
             'nextChapter' => $nextChapter,
+            'ogTitle'     => $chapter->title . ' — ' . $book->title . ' · Arquanzia',
+            'ogDescription' => 'Chapitre de ' . $book->title . ' dans la Bibliothèque d\'Arquanzia.',
+            'ogImage'     => $ogImage,
         ]);
-    }
-
-    public function markChapterComplete(Request $request, string $bookSlug, string $chapterSlug)
-    {
-        $context = $this->viewerResolver->resolve($request);
-        
-        if (!$context['user']) {
-            return redirect()->route('library.book', $bookSlug);
-        }
-
-        $book = Book::where('slug', $bookSlug)->firstOrFail();
-        $chapter = Chapter::where('book_id', $book->id)->where('slug', $chapterSlug)->firstOrFail();
-
-        // Mark as complete by setting progress to 100 and moving to "next" chapter (or keeping current if last)
-        $nextChapter = Chapter::where('book_id', $book->id)
-            ->where('order_index', '>', $chapter->order_index)
-            ->orderBy('order_index', 'asc')
-            ->first();
-
-        if ($nextChapter) {
-            ReadingProgress::updateProgress($context['user']->id, $book->id, $nextChapter->id, 0);
-        } else {
-            // Last chapter - mark with progress 100 to indicate "completed"
-            ReadingProgress::updateProgress($context['user']->id, $book->id, $chapter->id, 100);
-        }
-
-        return redirect()->route('library.book', $bookSlug);
     }
 }
