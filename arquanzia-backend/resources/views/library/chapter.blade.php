@@ -1,88 +1,150 @@
-<x-layouts.app title="{{ $chapter->title }} - {{ $book->title }} - Arquanzia">
+<x-layouts.app :title="$ogTitle" :description="$ogDescription" :ogImage="$ogImage">
     <div class="mb-6 flex items-center gap-2 text-sm">
         <a href="{{ route('library.index') }}" class="text-arq-forest hover:text-arq-forest-light">Bibliothèque</a>
-        <span class="text-arq-bark/40">›</span>
+        <span class="arq-faint">›</span>
         <a href="{{ route('library.book', $book->slug) }}" class="text-arq-forest hover:text-arq-forest-light">{{ $book->title }}</a>
-        <span class="text-arq-bark/40">›</span>
-        <span class="text-arq-bark/60">{{ $chapter->title }}</span>
+        <span class="arq-faint">›</span>
+        <span class="arq-dim">{{ $chapter->title }}</span>
     </div>
 
-    @if($isComingSoon)
-        <div class="card-arq p-12 text-center">
-            <span class="text-5xl">⏳</span>
-            <h1 class="font-serif text-2xl font-bold text-arq-forest mt-4">{{ $chapter->title }}</h1>
-            <p class="text-arq-bark mt-2">Ce chapitre sera bientôt dévoilé...</p>
-            @if($chapter->published_at)
-                <p class="text-arq-bark/60 text-sm mt-2">Disponible le {{ $chapter->published_at->format('d/m/Y') }}</p>
-            @endif
-        </div>
-    @elseif(!$hasAccess)
-        <div class="card-arq p-12 text-center">
-            <span class="text-5xl">🔮</span>
-            <h1 class="font-serif text-2xl font-bold text-arq-forest mt-4">{{ $chapter->title }}</h1>
-            <p class="text-arq-bark mt-2 font-serif">Ce savoir est réservé aux Lecteurs initiés.</p>
-            <a href="{{ route('account.access') }}" class="btn-arq btn-arq-primary mt-6 inline-block">Rejoindre les Lecteurs</a>
-        </div>
-    @else
-        <article class="card-arq">
-            <div class="p-6 md:p-12 lg:px-20">
-                <header class="mb-10 pt-6 -mt-6 pb-6 border-b border-arq-amber/20 text-center relative sticky top-0 z-50 bg-arq-parchment">
-                    <p class="text-arq-bark/60 text-sm mb-2">{{ $book->title }}</p>
-                    <h1 class="font-serif text-3xl md:text-4xl font-bold text-arq-forest">{{ $chapter->title }}</h1>
-                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-arq-parchment-dark">
-                        <div id="reading-progress" class="h-full bg-arq-forest transition-all duration-100" style="width: 0%"></div>
-                    </div>
-                </header>
-
-                <div class="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-arq-forest prose-p:text-arq-ink prose-p:leading-relaxed prose-a:text-arq-forest prose-a:no-underline hover:prose-a:underline">
-                    {!! $chapter->content_html !!}
+    <article class="card-arq">
+        <div class="p-6 md:p-12 lg:px-20">
+            <header class="mb-10 pt-6 -mt-6 pb-6 border-b border-arq-amber/20 text-center relative sticky top-0 z-50 bg-arq-parchment">
+                <p class="arq-dim text-sm mb-2">{{ $book->title }}</p>
+                <h1 class="font-serif text-3xl md:text-4xl font-bold text-arq-forest">{{ $chapter->title }}</h1>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-arq-parchment-dark">
+                    <div id="reading-progress" class="h-full bg-arq-forest transition-all duration-100" style="width: 0%"></div>
                 </div>
+            </header>
 
-                @if($chapter->files->count() > 0)
-                    <footer class="mt-12 pt-6 border-t border-arq-amber/20">
-                        <h3 class="font-serif font-bold text-arq-forest mb-3">Télécharger ce chapitre</h3>
-                        <div class="flex gap-3">
-                            @foreach($chapter->files as $file)
-                                <a href="{{ route('download.chapter', ['book' => $book->slug, 'chapter' => $chapter->slug, 'format' => $file->format]) }}" class="btn-arq btn-arq-secondary inline-flex items-center">
-                                    <span class="mr-2">📥</span> {{ strtoupper($file->format) }}
-                                </a>
-                            @endforeach
-                        </div>
-                    </footer>
+            <section class="mb-8 bg-arq-parchment-dark/70 dark:bg-arq-night-card border border-arq-amber/30 dark:border-arq-emerald/20 rounded-3xl p-5 md:p-6 shadow-parchment dark:shadow-night-soft">
+                <div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] arq-dim dark:text-gray-300">
+                    <span class="mr-1">Confort</span>
+                    <div class="flex items-center gap-2 text-base tracking-normal normal-case">
+                        <button type="button" id="reader-font-decrease"
+                            class="p-2 rounded-full border border-arq-amber/40 dark:border-arq-emerald/40 text-arq-forest dark:text-arq-mint hover:bg-arq-parchment dark:hover:bg-arq-night-lift transition"
+                            aria-label="Réduire la taille du texte" title="Réduire la taille du texte">
+                            <span aria-hidden="true" class="font-serif text-lg leading-none">A−</span>
+                        </button>
+                        <span id="reader-font-size-value" class="text-sm font-normal arq-body dark:text-gray-200" aria-live="polite">100%</span>
+                        <button type="button" id="reader-font-increase"
+                            class="p-2 rounded-full border border-arq-amber/40 dark:border-arq-emerald/40 text-arq-forest dark:text-arq-mint hover:bg-arq-parchment dark:hover:bg-arq-night-lift transition"
+                            aria-label="Augmenter la taille du texte" title="Augmenter la taille du texte">
+                            <span aria-hidden="true" class="font-serif text-lg leading-none">A+</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button type="button" id="reader-dyslexic-toggle"
+                            class="reader-font-option px-3 py-2 inline-flex items-center justify-center rounded-full"
+                            data-state="inactive"
+                            aria-pressed="false"
+                            aria-label="Basculer vers la police OpenDyslexic" title="Police OpenDyslexic">
+                            <span aria-hidden="true" class="reader-font-option__label font-semibold tracking-wider">OD</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <div id="chapter-content" class="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-arq-forest prose-p:text-arq-ink prose-p:leading-relaxed prose-a:text-arq-forest prose-a:no-underline hover:prose-a:underline transition-[font-size] duration-150 ease-out">
+                {!! $chapter->content_md ? \App\Helpers\MarkdownHelper::render($chapter->content_md) : '' !!}
+            </div>
+
+            <footer class="mt-12 pt-6 border-t border-arq-amber/20">
+                <h3 class="font-serif font-bold text-arq-forest dark:text-arq-mint mb-3">Télécharger ce chapitre</h3>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('download.chapter', ['book' => $book->slug, 'chapter' => $chapter->slug, 'format' => 'epub']) }}"
+                        class="btn-arq btn-arq-secondary inline-flex items-center gap-2">
+                        <span>📗</span> EPUB
+                    </a>
+                    <a href="{{ route('download.chapter', ['book' => $book->slug, 'chapter' => $chapter->slug, 'format' => 'pdf']) }}"
+                        class="btn-arq btn-arq-primary inline-flex items-center gap-2">
+                        <span>📄</span> PDF
+                    </a>
+                </div>
+            </footer>
+
+            @if($chapter->promo_banner_enabled && $chapter->promo_banner_text)
+                <aside class="mt-10 rounded-2xl border border-arq-amber/30 dark:border-arq-mint/20 bg-arq-parchment-dark/60 dark:bg-arq-night-card p-6 md:p-8 text-center">
+                    <p class="arq-body leading-relaxed">{{ $chapter->promo_banner_text }}</p>
+                    @if($chapter->promo_banner_button_label && $chapter->promo_banner_button_url)
+                        <a href="{{ $chapter->promo_banner_button_url }}" target="_blank" rel="noopener"
+                           class="btn-arq btn-arq-primary mt-5 inline-block">{{ $chapter->promo_banner_button_label }}</a>
+                    @endif
+                </aside>
+            @endif
+
+            @if($prevChapter || $nextChapter)
+            <nav class="mt-12 pt-6 border-t border-arq-amber/20 flex items-center justify-between">
+                @if($prevChapter)
+                    <a href="{{ route('library.chapter', ['book' => $book->slug, 'chapter' => $prevChapter->slug]) }}" class="text-arq-forest hover:text-arq-forest-light font-medium">
+                        ← {{ Str::limit($prevChapter->title, 25) }}
+                    </a>
+                @else
+                    <span></span>
                 @endif
 
-                <nav class="mt-12 pt-6 border-t border-arq-amber/20 flex items-center justify-between">
-                    @if($prevChapter)
-                        <a href="{{ route('library.chapter', ['book' => $book->slug, 'chapter' => $prevChapter->slug]) }}" class="text-arq-forest hover:text-arq-forest-light font-medium">
-                            ← {{ Str::limit($prevChapter->title, 25) }}
-                        </a>
-                    @else
-                        <span></span>
-                    @endif
+                @if($nextChapter)
+                    <a href="{{ route('library.chapter', ['book' => $book->slug, 'chapter' => $nextChapter->slug]) }}" class="btn-arq btn-arq-primary">
+                        {{ Str::limit($nextChapter->title, 25) }} →
+                    </a>
+                @else
+                    <span></span>
+                @endif
+            </nav>
+            @endif
+        </div>
+    </article>
 
-                    @if($nextChapter)
-                        <a href="{{ route('library.chapter', ['book' => $book->slug, 'chapter' => $nextChapter->slug]) }}" class="btn-arq btn-arq-primary">
-                            {{ Str::limit($nextChapter->title, 25) }} →
-                        </a>
-                    @else
-                        <form action="{{ route('library.chapter.complete', ['book' => $book->slug, 'chapter' => $chapter->slug]) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="btn-arq btn-arq-primary">
-                                ✓ Chapitre terminé
-                            </button>
-                        </form>
-                    @endif
-                </nav>
-            </div>
-        </article>
+    <script>
+        (function() {
+            var progressBar = document.getElementById('reading-progress');
+            if (progressBar) {
+                window.addEventListener('scroll', function() {
+                    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    var progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+                    progressBar.style.width = Math.min(100, Math.max(0, progress)) + '%';
+                });
+            }
 
-        <script>
-            const progressBar = document.getElementById('reading-progress');
-            window.addEventListener('scroll', () => {
-                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                const progress = (window.scrollY / docHeight) * 100;
-                progressBar.style.width = Math.min(100, Math.max(0, progress)) + '%';
+            var chapterContent = document.getElementById('chapter-content');
+            var fontSizeValue = document.getElementById('reader-font-size-value');
+            var fontDecrease = document.getElementById('reader-font-decrease');
+            var fontIncrease = document.getElementById('reader-font-increase');
+            var dyslexicToggle = document.getElementById('reader-dyslexic-toggle');
+
+            var initialScale = parseInt(localStorage.getItem('reader_font_scale') || '100', 10);
+
+            var applyFontScale = function(scale) {
+                if (!chapterContent) return;
+                var normalized = Math.min(130, Math.max(85, scale));
+                chapterContent.style.fontSize = normalized / 100 + 'em';
+                if (fontSizeValue) fontSizeValue.textContent = normalized + '%';
+                localStorage.setItem('reader_font_scale', normalized.toString());
+            };
+
+            applyFontScale(initialScale);
+            if (fontDecrease) fontDecrease.addEventListener('click', function() {
+                applyFontScale(parseInt(localStorage.getItem('reader_font_scale') || '100', 10) - 5);
             });
-        </script>
-    @endif
+            if (fontIncrease) fontIncrease.addEventListener('click', function() {
+                applyFontScale(parseInt(localStorage.getItem('reader_font_scale') || '100', 10) + 5);
+            });
+
+            if (dyslexicToggle && chapterContent) {
+                var isDyslexic = localStorage.getItem('reader_font_dyslexic') === '1';
+
+                var applyDyslexic = function(enabled) {
+                    chapterContent.classList.toggle('font-reader-dyslexic', enabled);
+                    dyslexicToggle.setAttribute('data-state', enabled ? 'active' : 'inactive');
+                    dyslexicToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+                    localStorage.setItem('reader_font_dyslexic', enabled ? '1' : '0');
+                };
+
+                applyDyslexic(isDyslexic);
+                dyslexicToggle.addEventListener('click', function() {
+                    applyDyslexic(dyslexicToggle.getAttribute('data-state') !== 'active');
+                });
+            }
+        })();
+    </script>
 </x-layouts.app>
