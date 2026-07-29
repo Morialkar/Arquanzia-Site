@@ -49,9 +49,15 @@ class EncyclopediaController extends Controller
             'order_index' => 'integer|min:0',
             'content_md' => 'nullable|string',
             'cover' => 'nullable|image|max:5120',
+            'thumbnail' => 'nullable|image|max:5120',
         ]);
 
         $slug = $request->input('slug') ?: Str::slug($request->input('title'));
+
+        $thumbnailMediaId = null;
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailMediaId = $this->uploadMedia($request->file('thumbnail'));
+        }
 
         $node = EncyclopediaNode::create([
             'title' => $request->input('title'),
@@ -60,6 +66,7 @@ class EncyclopediaController extends Controller
             'parent_id' => $request->input('parent_id'),
             'visibility' => $request->input('visibility'),
             'teaser_md' => $request->input('teaser_md'),
+            'thumbnail_media_id' => $thumbnailMediaId,
             'order_index' => $request->input('order_index', 0),
         ]);
 
@@ -101,10 +108,18 @@ class EncyclopediaController extends Controller
             'order_index' => 'integer|min:0',
             'content_md' => 'nullable|string',
             'cover' => 'nullable|image|max:5120',
+            'thumbnail' => 'nullable|image|max:5120',
             'gallery.*' => 'nullable|image|max:5120',
+            'gallery_caption.*' => 'nullable|string|max:255',
+            'gallery_downloadable.*' => 'nullable|boolean',
         ]);
 
         $slug = $request->input('slug') ?: Str::slug($request->input('title'));
+
+        $thumbnailMediaId = $encyclopedium->thumbnail_media_id;
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailMediaId = $this->uploadMedia($request->file('thumbnail'));
+        }
 
         $encyclopedium->update([
             'title' => $request->input('title'),
@@ -112,6 +127,7 @@ class EncyclopediaController extends Controller
             'parent_id' => $request->input('parent_id'),
             'visibility' => $request->input('visibility'),
             'teaser_md' => $request->input('teaser_md'),
+            'thumbnail_media_id' => $thumbnailMediaId,
             'order_index' => $request->input('order_index', 0),
         ]);
 
@@ -140,6 +156,17 @@ class EncyclopediaController extends Controller
                         'order_index' => $maxOrder + $index + 1,
                     ]);
                 }
+            }
+
+            // Update existing gallery images captions and downloadable options
+            $captions = $request->input('gallery_caption', []);
+            $downloadable = $request->input('gallery_downloadable', []);
+            
+            foreach ($encyclopedium->article->gallery as $image) {
+                $image->update([
+                    'caption' => $captions[$image->id] ?? null,
+                    'downloadable' => isset($downloadable[$image->id]),
+                ]);
             }
         }
 

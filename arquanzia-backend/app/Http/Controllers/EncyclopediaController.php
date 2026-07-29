@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\EncyclopediaNode;
-use App\Models\Favorite;
 use App\Services\ViewerResolver;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,17 +17,9 @@ class EncyclopediaController extends Controller
     {
         $context = $this->viewerResolver->resolve($request);
 
-        $query = EncyclopediaNode::roots()->with(['children', 'article']);
-
-        if ($context['is_banned']) {
-            $query->publicVisibility();
-        }
+        $query = EncyclopediaNode::roots()->with(['children', 'article', 'thumbnail']);
 
         $nodes = $query->get();
-
-        if ($context['is_banned']) {
-            $nodes = $this->filterBannedNodes($nodes);
-        }
 
         return view('encyclopedia.index', [
             'nodes' => $nodes,
@@ -47,18 +38,8 @@ class EncyclopediaController extends Controller
             abort(404);
         }
 
-        if ($context['is_banned'] && $node->isReaderOnly()) {
-            abort(404);
-        }
-
-        $hasAccess = $node->isPublic() || in_array($context['viewer_tier'], ['reader', 'vip_reader']);
-
         if ($node->isCategory()) {
-            $children = $node->children()->with('article')->get();
-            
-            if ($context['is_banned']) {
-                $children = $children->filter(fn($n) => $n->isPublic());
-            }
+            $children = $node->children()->with(['article', 'thumbnail'])->get();
 
             return view('encyclopedia.category', [
                 'node' => $node,
@@ -68,19 +49,23 @@ class EncyclopediaController extends Controller
             ]);
         }
 
-        $node->load(['article.cover', 'article.gallery.media']);
+        $node->load(['article.cover', 'article.gallery.media', 'thumbnail']);
 
-        $isFavorite = false;
-        if ($context['user']) {
-            $isFavorite = Favorite::isFavorite($context['user']->id, 'encyclopedia', $node->id);
-        }
+        $ogImage = $node->thumbnail ? route('media.show', $node->thumbnail->id)
+            : ($node->article?->cover ? route('media.show', $node->article->cover->id) : null);
+
+        $ogDescription = $node->teaser_md
+            ? \Illuminate\Support\Str::limit(strip_tags($node->teaser_html), 160)
+            : 'Entrée de l\'Encyclopédie d\'Arquanzia.';
 
         return view('encyclopedia.article', [
             'node' => $node,
             'ancestors' => $node->ancestors(),
             'context' => $context,
-            'hasAccess' => $hasAccess,
-            'isFavorite' => $isFavorite,
+            'hasAccess' => true,
+            'ogTitle' => $node->title . ' — Encyclopédie · Arquanzia',
+            'ogDescription' => $ogDescription,
+            'ogImage' => $ogImage,
         ]);
     }
 
@@ -110,13 +95,5 @@ class EncyclopediaController extends Controller
         return $node;
     }
 
-    protected function filterBannedNodes($nodes)
-    {
-        return $nodes->filter(fn($n) => $n->isPublic())->map(function ($node) {
-            if ($node->children) {
-                $node->setRelation('children', $this->filterBannedNodes($node->children));
-            }
-            return $node;
-        });
-    }
+
 }

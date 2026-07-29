@@ -19,6 +19,7 @@ class EncyclopediaNode extends Model
         'title',
         'visibility',
         'teaser_md',
+        'thumbnail_media_id',
         'order_index',
     ];
 
@@ -30,6 +31,11 @@ class EncyclopediaNode extends Model
     public function children(): HasMany
     {
         return $this->hasMany(EncyclopediaNode::class, 'parent_id')->orderBy('order_index');
+    }
+
+    public function thumbnail(): BelongsTo
+    {
+        return $this->belongsTo(PostMedia::class, 'thumbnail_media_id');
     }
 
     public function article(): HasOne
