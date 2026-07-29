@@ -175,7 +175,7 @@ class EncyclopediaImportService
                     'type' => 'category',
                     'slug' => $slug,
                     'title' => $this->slugToTitle($part),
-                    'visibility' => 'public',
+                    'is_published' => true,
                     'order_index' => $maxOrder + 1,
                 ]);
                 
@@ -209,7 +209,7 @@ class EncyclopediaImportService
             'type' => 'article',
             'slug' => $slug,
             'title' => $parsed['title'] ?: $this->slugToTitle($filename),
-            'visibility' => 'public',
+            'is_published' => true,
             'teaser_md' => $parsed['teaser'],
             'order_index' => $maxOrder + 1,
         ]);

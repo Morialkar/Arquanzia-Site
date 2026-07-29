@@ -52,7 +52,7 @@ class SitemapController extends Controller
                 ];
             });
 
-        EncyclopediaNode::where('visibility', 'public')
+        EncyclopediaNode::published()
             ->whereNotNull('slug')
             ->get(['id', 'slug', 'parent_id', 'updated_at'])
             ->each(function ($node) use (&$urls) {

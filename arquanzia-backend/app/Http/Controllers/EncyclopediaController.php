@@ -17,9 +17,10 @@ class EncyclopediaController extends Controller
     {
         $context = $this->viewerResolver->resolve($request);
 
-        $query = EncyclopediaNode::roots()->with(['children', 'article', 'thumbnail']);
-
-        $nodes = $query->get();
+        $nodes = EncyclopediaNode::roots()
+            ->published()
+            ->with(['children' => fn ($query) => $query->published(), 'article', 'thumbnail'])
+            ->get();
 
         return view('encyclopedia.index', [
             'nodes' => $nodes,
@@ -39,7 +40,7 @@ class EncyclopediaController extends Controller
         }
 
         if ($node->isCategory()) {
-            $children = $node->children()->with(['article', 'thumbnail'])->get();
+            $children = $node->children()->published()->with(['article', 'thumbnail'])->get();
 
             return view('encyclopedia.category', [
                 'node' => $node,
@@ -75,8 +76,9 @@ class EncyclopediaController extends Controller
         $node = null;
 
         foreach ($segments as $slug) {
-            $query = EncyclopediaNode::where('slug', $slug);
-            
+            // Un nœud en brouillon rend tout son sous-arbre inaccessible, y compris par URL directe.
+            $query = EncyclopediaNode::where('slug', $slug)->published();
+
             if ($parentId === null) {
                 $query->whereNull('parent_id');
             } else {

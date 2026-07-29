@@ -1,0 +1,327 @@
+# Plan de reprise — Arquanzia
+
+État de départ : la refonte « site de contenu public » est versionnée (16 commits sur `main`,
+non poussés). Ce document couvre ce qui reste à faire, par lots ordonnés.
+
+---
+
+## Lot 0 — Correctifs bloquants
+
+À faire avant tout le reste : ce sont des bugs en production aujourd'hui.
+
+### 0.1 — `/admin/users/{id}` renvoie une erreur 500
+
+`Admin\UserController::show()` ne passe que `$user` à la vue, mais
+`resources/views/admin/users/show.blade.php` :
+
+- appelle `route('admin.users.readonly')` ligne 43, `admin.users.ban` ligne 49,
+  `admin.users.ban-handle` ligne 55, `admin.users.reset-handle-bans` ligne 62,
+  `admin.users.entitlement` lignes 85 et 122, `admin.users.sync-order` ligne 150 —
+  **sept noms de routes qui n'existent plus** ;
+- lit `$entitlements['vip']` ligne 76 et `$entitlements['reader']` ligne 113 — **variable
+  jamais définie** ;
+- lit `$user->accessControl?->is_banned` ligne 31 — relation supprimée du modèle.
+
+Correctif : réécrire la vue pour n'afficher que ce qui existe encore (identité, courriel,
+pseudo, date de création, publications). Il ne reste aucune action de modération à proposer.
+
+### 0.2 — La déconnexion admin ne déconnecte pas
+
+`Admin\AuthController::logout()` oublie `admin_email` et `admin_role`, mais laisse `user_id`
+en session. Or `AdminAuth::handle()` re-promeut automatiquement tout `user_id` présent dans
+l'allowlist. Résultat : après « déconnexion », un simple retour sur `/admin` réauthentifie.
+
+Correctif : `$request->session()->invalidate()` + `regenerateToken()`.
+
+### 0.3 — Fixation de session à la connexion
+
+`consumeMagicLink()` écrit dans la session sans la régénérer. Un identifiant de session
+obtenu avant la connexion reste valide après. Correctif : `session()->regenerate()` avant
+d'écrire `admin_email`.
+
+### 0.4 — Fuite d'exceptions vers le public
+
+`DownloadController::downloadBook()` et `downloadChapter()` renvoient `$e->getMessage()` en
+JSON avec un statut 500. Chemins serveur, requêtes SQL et détails d'implémentation exposés à
+n'importe quel visiteur. Correctif : journaliser l'exception, renvoyer un message neutre.
+
+### 0.5 — Vérifier `APP_DEBUG` sur le serveur
+
+Le `.env` local porte `APP_ENV=production` avec `APP_DEBUG=true` et `LOG_LEVEL=debug`. Le
+`.env` n'est pas synchronisé, donc l'état du serveur est inconnu — **à vérifier en premier**.
+En debug, une page d'erreur expose la configuration, les variables d'environnement et le code.
+
+### 0.6 — Contenu d'encyclopédie inaccessible
+
+`ViewerResolver::resolve()` retourne toujours `viewer_tier => 'public'`. Or `SearchController`
+et `EncyclopediaController` filtrent sur `visibility === 'public'` sauf pour les paliers
+`reader`/`vip_reader`, qui ne sont plus jamais attribués. Conséquence : **tout nœud dont la
+visibilité n'est pas `public` est invisible pour tout le monde, y compris pour toi**.
+
+Décision prise : plus de login lecteur, tout est en lecture publique. La seule chose qui peut
+bloquer un visiteur est le statut de publication d'un livre ou d'un chapitre.
+
+Correctif : `visibility` devient un simple brouillon/publié sur les nœuds d'encyclopédie,
+aligné sur le `is_published` des livres et chapitres. Retirer partout les conditions sur
+`viewer_tier`, `is_banned`, `is_logged_in`, et supprimer `ViewerResolver` — il ne fait plus
+rien d'utile. Voir lot 4 pour le nettoyage complet.
+
+---
+
+## Lot 1 — Audit de sécurité
+
+### 1.1 — Points vérifiés et sains
+
+- **Magic links** : jeton de 64 caractères aléatoires, stocké en SHA-256, usage unique,
+  expiration 15 minutes, limitation de débit par IP+courriel. Correct.
+- **Injection SQL** : aucune requête brute, tout passe par Eloquent avec liaison de
+  paramètres. Les `LIKE "%{$query}%"` sont paramétrés par le constructeur de requêtes.
+- **Échappement des vues** : les 13 usages de `{!! !!}` portent tous sur du contenu rédigé
+  par un administrateur (HTML d'encyclopédie, markdown de chapitre). Pas d'entrée visiteur
+  rendue sans échappement.
+
+### 1.2 — À corriger
+
+| Gravité | Sujet | Détail |
+|---|---|---|
+| Élevée | `APP_DEBUG` en production | Voir 0.5 |
+| Élevée | Fuite d'exceptions | Voir 0.4 |
+| Élevée | Déconnexion inopérante | Voir 0.2 |
+| Moyenne | **Téléversement de SVG brut** | `Admin\SettingsController::updateLogo()` accepte le SVG et le déplace tel quel dans `storage/app/public/logos/`, servi ensuite depuis la même origine que le site. Un SVG peut contenir `<script>`. Réservé aux admins, donc pas une porte ouverte, mais un XSS stocké permanent en cas de compte admin compromis. Correctif : assainir le SVG (retirer `script`, `on*`, `foreignObject`) ou servir les logos avec `Content-Disposition: attachment` / depuis un sous-domaine distinct. |
+| Moyenne | Aucune CSP | Aggravée par le chargement de Tailwind et Google Fonts depuis des CDN tiers : le site exécute du JavaScript distant sur toutes ses pages. Poser une CSP suppose d'abord de rapatrier ces ressources (lot 5.1). |
+| Moyenne | Cookies de session | `SESSION_ENCRYPT=false`, `SESSION_DOMAIN=null`, durée de vie 30 jours. Vérifier `secure`, `http_only`, `same_site=lax` dans `config/session.php` et forcer HTTPS. |
+| Moyenne | Aucune limitation de débit publique | `/api/recherche` et `/api/reader-preferences` sont ouverts sans limite. Chaque appel de recherche déclenche trois `LIKE %…%` sans index : facilement saturable. Ajouter `throttle`. |
+| Faible | Médias sans contrôle d'accès | `MediaController::show()` sert tout média à qui connaît son identifiant (UUID, donc non énumérable). À confirmer comme choix assumé, le README affirme l'inverse. |
+| Faible | Traversée de chemin | `DownloadController::downloadImage()` compose des chemins depuis `$media->filename`. Valeur écrite par un admin, donc risque théorique — à borner par une validation de nom de fichier. |
+| Faible | `EncyclopediaImportService` | Import de fichiers depuis une archive : à relire pour la traversée de chemin et les types de fichiers acceptés. |
+
+### 1.3 — Surface réduite par le lot 4
+
+Le retrait du socle WebAuthn/mot de passe (lot 4) supprime au passage la colonne `password`,
+la table `webauthn_credentials` et le guard maison. Autant de surface d'attaque en moins, et
+un seul chemin d'authentification restant à auditer : le magic link admin, déjà validé en 1.1.
+
+---
+
+## Lot 2 — Suite de tests
+
+Aujourd'hui : deux stubs Laravel (`tests/Unit/ExampleTest.php`, `tests/Feature/ExampleTest.php`).
+PHPUnit est configuré et jamais lancé.
+
+Objectif : pas une couverture exhaustive, mais un filet qui rattrape les régressions du type
+lot 0 — pages qui explosent, routes disparues, contenu privé qui fuit.
+
+### 2.1 — Socle
+
+- Base SQLite en mémoire pour les tests (`phpunit.xml`), `RefreshDatabase`.
+- Fabriques (`database/factories/`) pour `User`, `Book`, `Chapter`, `EncyclopediaNode`,
+  `FragmentNode`, `FragmentItem`, `Post`. Aucune n'existe actuellement.
+
+### 2.2 — Tests de fumée (le plus rentable)
+
+Un test qui parcourt toutes les routes `GET` publiques et vérifie un statut 200 : accueil,
+fil, bibliothèque, encyclopédie, fragments, recherche, sitemap. Puis le même pour le
+back-office en session admin. **C'est ce test qui aurait attrapé le 500 de `/admin/users/{id}`.**
+
+### 2.3 — Tests d'accès
+
+Le statut de publication est désormais la seule règle d'accès du site : c'est donc là qu'il
+faut mettre l'essentiel du filet.
+
+- Un livre non publié renvoie 404 ; un chapitre non publié renvoie 404 ; un chapitre
+  « bientôt disponible » renvoie 404.
+- Un livre non publié n'apparaît ni dans la bibliothèque, ni dans la recherche, ni dans le
+  sitemap. Idem pour un chapitre non publié et un nœud d'encyclopédie en brouillon.
+- Le téléchargement PDF/EPUB d'un livre ou d'un chapitre non publié renvoie 404.
+- Une route admin sans session redirige vers `/admin/login`.
+- Après déconnexion, `/admin` redirige vers la connexion (le test qui verrouille 0.2).
+
+### 2.4 — Tests unitaires ciblés
+
+- `MarkdownHelper` : gras non fermé, italique sur plusieurs lignes, lignes d'astérisques
+  seules, fins de ligne Windows. Ce sont exactement les rustines du parseur maison, et rien
+  ne les protège.
+- `MagicLink` : jeton expiré rejeté, jeton déjà utilisé rejeté, jeton inconnu rejeté.
+- `BookExportService` : l'export PDF et EPUB produit un fichier non vide au bon type MIME.
+
+### 2.5 — Contrainte
+
+Le `.windsurf` interdisait les commandes artisan locales parce que la base est distante.
+Une fois les tests sur SQLite en mémoire, `php artisan test` tourne en local sans toucher à
+la production — la contrainte tombe pour les tests.
+
+---
+
+## Lot 3 — Pipeline de déploiement
+
+### 3.1 — Ce qui remplace quoi
+
+`sync-watch.sh` fait un `rsync --delete` depuis le poste local vers la production, à chaque
+sauvegarde de fichier, sans build ni test ni possibilité de revenir en arrière. C'est le
+maillon le plus fragile de la chaîne.
+
+Cible : un déclenchement sur `push` vers `main`, qui teste, construit, puis déploie.
+
+### 3.2 — Étapes du workflow
+
+1. **Job `test`** : PHP 8.4, `composer install`, `php artisan test`, `./vendor/bin/pint --test`.
+2. **Job `build`** : `npm ci && npm run build` (dépend du lot 5.1 — aujourd'hui il n'y a rien
+   à construire, Tailwind vient d'un CDN).
+3. **Job `deploy`** (uniquement sur `main`, si `test` et `build` passent) :
+   - `rsync` vers le serveur via clé SSH stockée en secret ;
+   - `composer install --no-dev --optimize-autoloader` ;
+   - `php artisan migrate --force` ;
+   - `php artisan view:clear && cache:clear && config:cache && route:cache`.
+
+### 3.3 — Migration du dépôt vers GitHub
+
+Décision prise : le dépôt passe sur GitHub, qui fournit les runners.
+
+Étapes, dans l'ordre :
+
+1. Créer un dépôt **privé** `Arquanzia` sur GitHub — à faire depuis ton compte, je ne crée
+   pas de dépôt à ta place.
+2. Basculer l'origine : `git remote set-url origin git@github.com:<compte>/Arquanzia.git`,
+   en gardant Gitea en second distant (`git remote add gitea …`) le temps de vérifier que
+   tout est bien arrivé.
+3. Pousser les 16 commits de la refonte, aujourd'hui uniquement locaux.
+4. Une fois la CI verte et un déploiement réussi, décider du sort du dépôt Gitea (archive ou
+   suppression).
+
+### 3.4 — Points à régler
+
+- Secrets à créer dans les paramètres du dépôt GitHub : clé SSH de déploiement, hôte, chemin
+  distant. La clé publique correspondante va dans `~/.ssh/authorized_keys` sur le serveur.
+- Le dépôt étant privé, les minutes de runner sont comptées : garder les workflows courts et
+  mettre en cache `vendor/` et `node_modules/`.
+- Le déploiement doit exclure `.env`, `storage/`, `vendor/`, `node_modules/` — comme le
+  script actuel.
+- Prévoir un déclenchement manuel (`workflow_dispatch`) pour les urgences.
+- Conserver `sync-watch.sh` le temps de la transition, puis le supprimer.
+
+---
+
+## Lot 4 — Retirer l'authentification lecteur
+
+Décision prise : **il n'y a pas de login lecteur.** Tout le contenu est en lecture publique,
+et la seule règle d'accès est le statut de publication. Le seul compte du site est l'admin,
+qui se connecte par magic link — mécanisme indépendant de tout ce qui suit.
+
+### 4.1 — Socle WebAuthn / mot de passe
+
+Posé mais totalement inerte : aucune route, aucun contrôleur, aucun appel à `Auth::login()`.
+`ArquanziaGuard` référence même en commentaire un `RememberLoginService` qui n'existe pas.
+
+À retirer :
+
+- `app/Auth/ArquanziaGuard.php` et l'enregistrement du guard dans `AppServiceProvider::boot()`
+- `config/webauthn.php`, `resources/js/vendor/webauthn/`
+- `config/auth.php` : revenir à `driver => 'session'` et `driver => 'eloquent'`
+- `User implements Authenticatable` et les sept méthodes `getAuth*` / `*RememberToken`
+- Dépendance `laragear/webauthn` dans `composer.json`
+- Migrations : `create_webauthn_credentials`, `add_password_to_users_table`,
+  `create_remember_logins_table` — remplacées par des migrations de retrait, les tables
+  existant déjà en production
+
+### 4.2 — Préférences de lecture côté serveur
+
+Découverte en vérifiant la portée de la décision : **ce stack est une boucle fermée.**
+`ReaderPreferenceController` renvoie 401 à tout visiteur non connecté — donc à tous les
+lecteurs, désormais. Et le front n'appelle même pas cet endpoint : `library/chapter.blade.php`
+gère déjà la taille de police et la police dyslexique **entièrement en `localStorage`**
+(lignes 115 à 140). Le comportement visible pour le lecteur est correct et le restera.
+
+À retirer : `ReaderPreferenceController`, la route `/api/reader-preferences`, les colonnes
+`reader_font` / `reader_font_size` / `theme_pref` sur `users` (le thème passe aussi par
+`localStorage`), et les constantes désormais inutilisées de `App\Support\ReaderPreferences`.
+
+À conserver : la conversion pourcentage ↔ pixels si les exports PDF/EPUB s'en servent — à
+vérifier, `DownloadController` lit `font` et `size` directement depuis la requête.
+
+### 4.3 — `ViewerResolver` et les paliers résiduels
+
+`ViewerResolver` retourne un tableau de sept clés dont six sont des constantes. Les conditions
+qui le consomment (`viewer_tier in ['reader','vip_reader']`, `is_banned`, `is_logged_in`) sont
+mortes mais toujours écrites, dans `SearchController`, `EncyclopediaController` et les vues.
+
+À retirer entièrement, en remplaçant les conditions par le seul filtre de publication. C'est
+ce qui débloque 0.6.
+
+---
+
+## Lot 5 — Dette technique
+
+### 5.1 — Rapatrier les assets (le plus impactant)
+
+Tailwind est chargé depuis `cdn.tailwindcss.com` dans les deux gabarits, avec la
+configuration en ligne, alors que **Vite et Tailwind 4 sont installés et configurés**… et
+que `@vite` n'apparaît dans aucune vue. Le pipeline d'assets est entièrement mort.
+
+Conséquences : compilation du CSS dans le navigateur à chaque page, apparition brutale du
+style non stylé, dépendance à un CDN tiers, et ce CDN n'est pas destiné à la production.
+Idem pour Google Fonts alors que `public/fonts/` contient déjà les polices.
+
+C'est aussi le préalable à la CSP (1.2) et au job `build` (3.2).
+
+### 5.2 — Découper `app.blade.php`
+
+1095 lignes : configuration Tailwind, thème clair/sombre, navigation desktop, navigation
+mobile, JavaScript. À éclater en composants.
+
+### 5.3 — Code mort
+
+- `resources/views/admin/moderation/` et `resources/views/admin/delivery/` : plus aucune
+  route n'y mène, et elles référencent des routes supprimées.
+- `resources/views/components/access/` : six composants d'entitlements et de livraison,
+  orphelins, dont trois appellent des routes inexistantes.
+- `app/Console/Commands/DispatchChapterDeliveries.php` : le service qu'elle appelait a été
+  supprimé.
+- `arquanzia-backend/.run-migration` : fichier vide versionné, alors que `sync-watch.sh`
+  cherche `.run-migrations` (pluriel). L'un des deux est un vestige.
+- Migrations mal datées : `2024_01_15_000002_create_printers_table.php` a été écrite bien
+  après, et une migration `drop_printers` la suit immédiatement. Un déploiement à froid crée
+  puis détruit la table. À fusionner ou supprimer.
+
+### 5.4 — Remplacer le parseur Markdown maison
+
+`MarkdownHelper` est un parseur ligne à ligne avec des rustines (« fermer le gras impair »,
+« supprimer les lignes d'astérisques »). `league/commonmark` est déjà dans `vendor/`, exposé
+par `Str::markdown()`. Conserver éventuellement un pré-traitement pour les particularités
+Obsidian, mais déléguer le rendu.
+
+### 5.5 — Recherche
+
+`LIKE %…%` sur les titres uniquement, aucun index utilisable, trois requêtes par appel. Ne
+cherche pas dans le contenu. Piste : index `FULLTEXT` MySQL, ou une table d'index dédiée
+alimentée à l'enregistrement.
+
+### 5.6 — Documentation
+
+- `arquanzia-backend/README.md` décrit un produit qui n'existe plus : App Proxy Shopify,
+  paliers VIP/Reader, webhooks `orders/paid`, commentaires, règles de bannissement. À
+  réécrire intégralement.
+- `documentation/notes importantes.md` et les sept Épics décrivent la trajectoire Shopify
+  abandonnée. À archiver dans un dossier `historique/` plutôt qu'à supprimer — ils expliquent
+  pourquoi le code ressemblait à ça.
+
+### 5.7 — Accessibilité
+
+`user-scalable=no` dans la balise viewport du gabarit public empêche le zoom sur mobile.
+
+---
+
+## Ordre suggéré
+
+1. **Lot 0.1 à 0.5** — les correctifs bloquants, dans la journée. Vérifier `APP_DEBUG` sur le
+   serveur en premier, c'est une variable à changer, pas du code à écrire.
+2. **Lot 4** — le retrait de l'authentification lecteur et des paliers, qui règle 0.6 au
+   passage. À faire avant les tests, sinon on écrit des tests sur du code à supprimer.
+3. **Lot 2** — le socle de tests et les tests de fumée, qui verrouillent les lots 0 et 4.
+4. **Lot 3** — la migration GitHub et le pipeline, une fois qu'il y a des tests à y faire
+   tourner.
+5. **Lot 5.1** — les assets, qui débloquent le job de build et la CSP.
+6. **Lot 1** — le reste des correctifs de sécurité, CSP comprise.
+7. **Lot 5** — le reste de la dette, au fil de l'eau.
+
+À noter : les lots 0 et 4 touchent beaucoup les mêmes fichiers (`ViewerResolver`,
+`SearchController`, les vues admin). Les enchaîner évite de repasser deux fois dessus.

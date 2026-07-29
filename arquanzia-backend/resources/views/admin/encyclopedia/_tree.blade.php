@@ -5,8 +5,8 @@
                 <div class="flex items-center gap-2">
                     <span class="text-lg">{{ $node->isCategory() ? '📁' : '📄' }}</span>
                     <span class="font-medium text-arq-forest dark:text-gray-100">{{ $node->title }}</span>
-                    @if($node->isReaderOnly())
-                        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200 text-xs rounded-full">Lecteur</span>
+                    @if($node->isDraft())
+                        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200 text-xs rounded-full">Brouillon</span>
                     @endif
                     <span class="text-gray-400 dark:text-gray-500 text-xs font-mono">/{{ $node->slug }}</span>
                 </div>

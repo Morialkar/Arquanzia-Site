@@ -20,7 +20,7 @@ class HomepageController extends Controller
             ->latest('published_at')
             ->first();
 
-        $encyclopediaNodes = EncyclopediaNode::where('visibility', 'public')
+        $encyclopediaNodes = EncyclopediaNode::published()
             ->where('type', 'article')
             ->with(['article:node_id,cover_media_id', 'thumbnail', 'parent:id,title,slug,parent_id', 'parent.parent:id,title,slug,parent_id'])
             ->latest()

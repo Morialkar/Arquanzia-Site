@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAllowlist;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +35,8 @@ class UserController extends Controller
     {
         return view('admin.users.show', [
             'user' => $user,
+            'adminRole' => $user->email ? AdminAllowlist::getRole($user->email) : null,
+            'posts' => $user->posts()->orderBy('created_at', 'desc')->get(),
         ]);
     }
 

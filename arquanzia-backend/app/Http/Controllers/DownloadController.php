@@ -8,6 +8,7 @@ use App\Models\EncyclopediaGalleryImage;
 use App\Services\BookExportService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -35,11 +36,7 @@ class DownloadController extends Controller
                 'Content-Disposition' => 'attachment; filename="' . $result['filename'] . '"',
             ]);
         } catch (\Throwable $e) {
-            return response(
-                json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-                500,
-                ['Content-Type' => 'application/json']
-            );
+            return $this->exportFailed($e, ['book' => $book->slug, 'format' => $format]);
         }
     }
 
@@ -64,12 +61,23 @@ class DownloadController extends Controller
                 'Content-Disposition' => 'attachment; filename="' . $result['filename'] . '"',
             ]);
         } catch (\Throwable $e) {
-            return response(
-                json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-                500,
-                ['Content-Type' => 'application/json']
-            );
+            return $this->exportFailed($e, [
+                'book' => $book->slug,
+                'chapter' => $chapter->slug,
+                'format' => $format,
+            ]);
         }
+    }
+
+    /**
+     * Journalise l'échec côté serveur et ne renvoie qu'un message neutre : le message
+     * d'exception exposait chemins, requêtes SQL et détails d'implémentation au public.
+     */
+    protected function exportFailed(\Throwable $e, array $context): Response
+    {
+        Log::error('Échec de la génération du téléchargement', $context + ['exception' => $e]);
+
+        return response()->view('errors.500', [], 500);
     }
 
     public function downloadImage(string $imageId): BinaryFileResponse|Response|StreamedResponse

@@ -58,12 +58,14 @@
             @endif
         </div>
         <div>
-            {{-- Visibilité pour les deux modes --}}
-            <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-1">Visibilité *</label>
-            <select name="visibility" required class="w-full px-3 py-2 border border-arq-amber/40 dark:border-white/20 rounded-lg bg-white dark:bg-black/20 text-arq-ink dark:text-white">
-                <option value="public" {{ old('visibility', $node?->visibility) === 'public' ? 'selected' : '' }}>Public</option>
-                <option value="reader" {{ old('visibility', $node?->visibility) === 'reader' ? 'selected' : '' }}>Lecteur uniquement</option>
-            </select>
+            {{-- Publication pour les deux modes --}}
+            <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-1">Publication</label>
+            <label class="flex items-center gap-2 px-3 py-2 border border-arq-amber/40 dark:border-white/20 rounded-lg bg-white dark:bg-black/20">
+                <input type="hidden" name="is_published" value="0">
+                <input type="checkbox" name="is_published" value="1" @checked(old('is_published', $node?->is_published ?? true)) class="rounded border-arq-amber/40 text-arq-forest focus:ring-arq-forest">
+                <span class="text-sm text-arq-ink dark:text-white">Publié</span>
+            </label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-white/50">Un brouillon est invisible pour les visiteurs, y compris par URL directe, ainsi que tout son sous-arbre.</p>
         </div>
     </div>
 

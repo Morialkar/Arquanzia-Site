@@ -44,11 +44,11 @@ class SearchController extends Controller
             $results['chapters'] = $chaptersQuery->limit(10)->get();
 
             // Search encyclopedia (title only)
-            $encyclopediaQuery = EncyclopediaNode::where('title', 'LIKE', "%{$query}%")->with('article.cover');
-            if (!in_array($context['viewer_tier'], ['reader', 'vip_reader'])) {
-                $encyclopediaQuery->where('visibility', 'public');
-            }
-            $results['encyclopedia'] = $encyclopediaQuery->limit(10)->get();
+            $results['encyclopedia'] = EncyclopediaNode::where('title', 'LIKE', "%{$query}%")
+                ->published()
+                ->with('article.cover')
+                ->limit(10)
+                ->get();
         }
 
         $totalResults = $results['books']->count() + $results['chapters']->count() + $results['encyclopedia']->count();
@@ -82,10 +82,9 @@ class SearchController extends Controller
                 ];
             }
 
-            $encyclopediaQuery = EncyclopediaNode::where('title', 'LIKE', "%{$query}%")->with('article.cover');
-            if (!in_array($context['viewer_tier'], ['reader', 'vip_reader'])) {
-                $encyclopediaQuery->where('visibility', 'public');
-            }
+            $encyclopediaQuery = EncyclopediaNode::where('title', 'LIKE', "%{$query}%")
+                ->published()
+                ->with('article.cover');
             foreach ($encyclopediaQuery->limit(5)->get() as $node) {
                 $results[] = [
                     'type' => 'encyclopedia',

@@ -80,9 +80,6 @@
                                     @endif
                                     <div>
                                         <span class="font-medium text-gray-800">{{ $node->title }}</span>
-                                        @if($node->isReaderOnly())
-                                            <span class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">Lecteur</span>
-                                        @endif
                                     </div>
                                 </a>
                             @endforeach

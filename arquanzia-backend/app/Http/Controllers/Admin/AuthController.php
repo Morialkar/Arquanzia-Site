@@ -70,6 +70,9 @@ class AuthController extends Controller
 
         $link->markAsUsed();
 
+        // Nouvelle session : un identifiant obtenu avant la connexion ne doit pas rester valide après.
+        $request->session()->regenerate();
+
         $request->session()->put('admin_email', $link->email);
         $request->session()->put('admin_role', AdminAllowlist::getRole($link->email));
 
@@ -112,7 +115,10 @@ class AuthController extends Controller
 
         AuditLog::log('admin.logout', $email, [], $request->ip());
 
-        $request->session()->forget(['admin_email', 'admin_role']);
+        // Vider entièrement la session : oublier seulement admin_email laissait user_id en place,
+        // et AdminAuth re-promeut automatiquement tout user_id présent dans l'allowlist.
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('admin.login');
     }

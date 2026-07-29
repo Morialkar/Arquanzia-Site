@@ -17,10 +17,14 @@ class EncyclopediaNode extends Model
         'type',
         'slug',
         'title',
-        'visibility',
+        'is_published',
         'teaser_md',
         'thumbnail_media_id',
         'order_index',
+    ];
+
+    protected $casts = [
+        'is_published' => 'boolean',
     ];
 
     public function parent(): BelongsTo
@@ -53,14 +57,9 @@ class EncyclopediaNode extends Model
         return $this->type === 'article';
     }
 
-    public function isPublic(): bool
+    public function isDraft(): bool
     {
-        return $this->visibility === 'public';
-    }
-
-    public function isReaderOnly(): bool
-    {
-        return $this->visibility === 'reader';
+        return !$this->is_published;
     }
 
     public function getTeaserHtmlAttribute(): ?string
@@ -112,8 +111,8 @@ class EncyclopediaNode extends Model
         return $query->where('type', 'article');
     }
 
-    public function scopePublicVisibility($query)
+    public function scopePublished($query)
     {
-        return $query->where('visibility', 'public');
+        return $query->where('is_published', true);
     }
 }
