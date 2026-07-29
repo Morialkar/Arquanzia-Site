@@ -12,7 +12,7 @@ class EncyclopediaGalleryImage extends Model
 
     protected $table = 'encyclopedia_gallery';
 
-    protected $fillable = ['article_id', 'media_id', 'order_index', 'caption'];
+    protected $fillable = ['article_id', 'media_id', 'order_index', 'caption', 'downloadable'];
 
     public function article(): BelongsTo
     {

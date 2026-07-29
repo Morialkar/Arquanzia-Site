@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use App\Models\BookFile;
 use App\Models\Chapter;
-use App\Models\ChapterFile;
+use App\Models\EncyclopediaGalleryImage;
 use App\Services\BookExportService;
-use App\Services\ViewerResolver;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -17,91 +15,107 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class DownloadController extends Controller
 {
     public function __construct(
-        protected ViewerResolver $viewerResolver
+        protected BookExportService $bookExportService
     ) {}
 
-    public function downloadBook(Request $request, string $slug, string $format): View|BinaryFileResponse|StreamedResponse
+    public function downloadBook(Request $request, string $slug, string $format): BinaryFileResponse|StreamedResponse|Response
     {
-        $context = $this->viewerResolver->resolve($request);
-        $hasAccess = in_array($context['viewer_tier'], ['reader', 'vip_reader']);
+        $book = Book::published()->where('slug', $slug)->firstOrFail();
 
-        if (!$hasAccess || $context['is_banned']) {
-            return view('library.download-denied', [
-                'context' => $context,
-                'type' => 'book',
-            ]);
-        }
-
-        $book = Book::where('slug', $slug)->published()->firstOrFail();
-        
-        $exportService = new BookExportService();
-        $exportPath = $exportService->getExportPath($book, $format);
-        
-        if ($exportPath && Storage::disk('local')->exists($exportPath)) {
-            $mimeType = $format === 'epub' ? 'application/epub+zip' : 'application/pdf';
-            return Storage::disk('local')->download($exportPath, "{$book->slug}.{$format}", [
-                'Content-Type' => $mimeType,
-            ]);
-        }
-        
-        $bookFile = BookFile::where('book_id', $book->id)
-            ->where('format', $format)
-            ->with('file')
-            ->first();
-
-        if ($bookFile && $bookFile->file) {
-            $filePath = storage_path('app/media/original/' . $bookFile->file->filename);
-            if (file_exists($filePath)) {
-                return response()->download($filePath, "{$book->slug}.{$format}");
-            }
-        }
+        $options = [
+            'font' => $request->get('font', 'standard'),
+            'size' => $request->get('size', 18),
+        ];
 
         try {
-            if ($format === 'epub') {
-                $exportService->generateEpub($book);
-            } else {
-                $exportService->generatePdf($book);
-            }
-            
-            $exportPath = $exportService->getExportPath($book, $format);
-            $mimeType = $format === 'epub' ? 'application/epub+zip' : 'application/pdf';
-            return Storage::disk('local')->download($exportPath, "{$book->slug}.{$format}", [
-                'Content-Type' => $mimeType,
+            $result = $this->bookExportService->export($book, $format, $options);
+
+            return response($result['content'], 200, [
+                'Content-Type' => $result['mime'],
+                'Content-Disposition' => 'attachment; filename="' . $result['filename'] . '"',
             ]);
-        } catch (\Exception $e) {
-            abort(404, 'Fichier non disponible.');
+        } catch (\Throwable $e) {
+            return response(
+                json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                500,
+                ['Content-Type' => 'application/json']
+            );
         }
     }
 
-    public function downloadChapter(Request $request, string $bookSlug, string $chapterSlug, string $format): View|BinaryFileResponse
+    public function downloadChapter(Request $request, string $bookSlug, string $chapterSlug, string $format): BinaryFileResponse|Response
     {
-        $context = $this->viewerResolver->resolve($request);
-        $hasAccess = in_array($context['viewer_tier'], ['reader', 'vip_reader']);
-
-        if (!$hasAccess || $context['is_banned']) {
-            return view('library.download-denied', [
-                'context' => $context,
-                'type' => 'chapter',
-            ]);
-        }
-
-        $book = Book::where('slug', $bookSlug)->published()->firstOrFail();
+        $book = Book::published()->where('slug', $bookSlug)->firstOrFail();
         $chapter = Chapter::where('book_id', $book->id)
             ->where('slug', $chapterSlug)
-            ->published()
+            ->where('is_published', true)
             ->firstOrFail();
 
-        $chapterFile = ChapterFile::where('chapter_id', $chapter->id)
-            ->where('format', $format)
-            ->with('file')
-            ->firstOrFail();
+        $options = [
+            'font' => $request->get('font', 'standard'),
+            'size' => $request->get('size', 18),
+        ];
 
-        $filePath = storage_path('app/media/original/' . $chapterFile->file->filename);
+        try {
+            $result = $this->bookExportService->export($chapter, $format, $options);
 
-        if (!file_exists($filePath)) {
+            return response($result['content'], 200, [
+                'Content-Type' => $result['mime'],
+                'Content-Disposition' => 'attachment; filename="' . $result['filename'] . '"',
+            ]);
+        } catch (\Throwable $e) {
+            return response(
+                json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                500,
+                ['Content-Type' => 'application/json']
+            );
+        }
+    }
+
+    public function downloadImage(string $imageId): BinaryFileResponse|Response|StreamedResponse
+    {
+        $image = EncyclopediaGalleryImage::find($imageId);
+
+        if (!$image) {
             abort(404);
         }
 
-        return response()->download($filePath, "{$book->slug}-{$chapter->slug}.{$format}");
+        if (!$image->downloadable) {
+            abort(403);
+        }
+
+        $media = $image->media;
+        if (!$media) {
+            abort(404);
+        }
+
+        $filename = $image->caption
+            ? \Illuminate\Support\Str::slug($image->caption) . '.jpg'
+            : 'encyclopedia-image-' . $image->id . '.jpg';
+
+        $possiblePaths = [];
+        if ($media->filename) {
+            $possiblePaths[] = 'media/' . $media->filename;
+            $possiblePaths[] = 'media/original/' . $media->filename;
+        }
+        if ($media->original_path) {
+            $possiblePaths[] = $media->original_path;
+        }
+
+        $foundPath = null;
+        foreach ($possiblePaths as $path) {
+            if (\Storage::disk('local')->exists($path)) {
+                $foundPath = $path;
+                break;
+            }
+        }
+
+        if (!$foundPath) {
+            abort(404);
+        }
+
+        return \Storage::disk('local')->download($foundPath, $filename, [
+            'Content-Type' => $media->mime,
+        ]);
     }
 }
