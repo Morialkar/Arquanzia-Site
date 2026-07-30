@@ -106,7 +106,7 @@ un seul chemin d'authentification restant à auditer : le magic link admin, déj
 
 ---
 
-## Lot 2 — Suite de tests
+## Lot 2 — Suite de tests ✅ fait (commit `92d946d`)
 
 Aujourd'hui : deux stubs Laravel (`tests/Unit/ExampleTest.php`, `tests/Feature/ExampleTest.php`).
 PHPUnit est configuré et jamais lancé.
@@ -114,19 +114,30 @@ PHPUnit est configuré et jamais lancé.
 Objectif : pas une couverture exhaustive, mais un filet qui rattrape les régressions du type
 lot 0 — pages qui explosent, routes disparues, contenu privé qui fuit.
 
-### 2.1 — Socle
+### 2.1 — Socle — en place
 
 - Base SQLite en mémoire pour les tests (`phpunit.xml`), `RefreshDatabase`.
 - Fabriques (`database/factories/`) pour `User`, `Book`, `Chapter`, `EncyclopediaNode`,
   `FragmentNode`, `FragmentItem`, `Post`. Aucune n'existe actuellement.
 
-### 2.2 — Tests de fumée (le plus rentable)
+### 2.2 — Tests de fumée — en place, et rentables immédiatement
 
-Un test qui parcourt toutes les routes `GET` publiques et vérifie un statut 200 : accueil,
-fil, bibliothèque, encyclopédie, fragments, recherche, sitemap. Puis le même pour le
-back-office en session admin. **C'est ce test qui aurait attrapé le 500 de `/admin/users/{id}`.**
+14 URL publiques et les 26 écrans du back-office, rendus pour de vrai. Ils ont trouvé
+**trois pages de plus en erreur 500** dès le premier passage, toutes par accès à du code
+supprimé et toutes invisibles à l'analyse statique :
 
-### 2.3 — Tests d'accès
+- `/admin/analytics` lisait `$stats['active_readers']` et `$stats['active_vips']`, jamais
+  fournis par le contrôleur. Les cartes de synthèse reposent désormais sur des mesures qui ont
+  encore un sens : contenus publiés et pages vues sur 30 jours.
+- `PageView::getReadingResumeRate()` interrogeait le modèle `ReadingProgress`, supprimé avec le
+  login lecteur. Métrique retirée.
+- Un import résiduel de `ModerationController` dans `routes/web.php`, classe supprimée depuis
+  le lot 0.
+
+Le filet a été éprouvé : en réintroduisant temporairement le bug de déconnexion du lot 0, les
+deux tests concernés échouent, puis repassent une fois le correctif rétabli.
+
+### 2.3 — Tests d'accès — en place
 
 Le statut de publication est désormais la seule règle d'accès du site : c'est donc là qu'il
 faut mettre l'essentiel du filet.
@@ -139,7 +150,7 @@ faut mettre l'essentiel du filet.
 - Une route admin sans session redirige vers `/admin/login`.
 - Après déconnexion, `/admin` redirige vers la connexion (le test qui verrouille 0.2).
 
-### 2.4 — Tests unitaires ciblés
+### 2.4 — Tests unitaires ciblés — en place
 
 - `MarkdownHelper` : gras non fermé, italique sur plusieurs lignes, lignes d'astérisques
   seules, fins de ligne Windows. Ce sont exactement les rustines du parseur maison, et rien
@@ -147,11 +158,25 @@ faut mettre l'essentiel du filet.
 - `MagicLink` : jeton expiré rejeté, jeton déjà utilisé rejeté, jeton inconnu rejeté.
 - `BookExportService` : l'export PDF et EPUB produit un fichier non vide au bon type MIME.
 
-### 2.5 — Contrainte
+### 2.5 — Contrainte levée
 
-Le `.windsurf` interdisait les commandes artisan locales parce que la base est distante.
-Une fois les tests sur SQLite en mémoire, `php artisan test` tourne en local sans toucher à
-la production — la contrainte tombe pour les tests.
+La base est distante, ce qui rendait toute vérification locale impossible. Avec SQLite en
+mémoire, `php artisan test` tourne en local sans toucher à la production. C'est aussi le
+premier moyen fiable de valider une migration avant de l'envoyer :
+
+```bash
+cd arquanzia-backend && php artisan test
+```
+
+### 2.6 — Reste à faire dans ce lot
+
+- **Pint n'a jamais été lancé** : `./vendor/bin/pint --test` échoue sur 45 fichiers, soit
+  presque tout le code. Le job de style du lot 3 échouerait donc dès le premier passage. Deux
+  options : un commit dédié « formatage seul » avant de brancher la CI, ou retirer Pint du
+  pipeline. Décision à prendre avec Naomi — 45 fichiers de diff, même purement cosmétique,
+  ça se valide.
+- Aucun test sur les écritures du back-office (création et modification de livres, chapitres,
+  entrées d'encyclopédie, fragments). Les tests de fumée ne couvrent que les `GET`.
 
 ---
 
