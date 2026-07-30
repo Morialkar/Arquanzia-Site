@@ -98,7 +98,7 @@ en publié depuis le back-office, où ils portent un badge « Brouillon ».
 | Faible | Traversée de chemin | `DownloadController::downloadImage()` compose des chemins depuis `$media->filename`. Valeur écrite par un admin, donc risque théorique — à borner par une validation de nom de fichier. |
 | Faible | `EncyclopediaImportService` | Import de fichiers depuis une archive : à relire pour la traversée de chemin et les types de fichiers acceptés. |
 
-### 1.3 — Surface réduite par le lot 4
+### 1.3 — Surface réduite par le lot 4 ✅
 
 Le retrait du socle WebAuthn/mot de passe (lot 4) supprime au passage la colonne `password`,
 la table `webauthn_credentials` et le guard maison. Autant de surface d'attaque en moins, et
@@ -204,13 +204,13 @@ Décision prise : le dépôt passe sur GitHub, qui fournit les runners.
 
 ---
 
-## Lot 4 — Retirer l'authentification lecteur
+## Lot 4 — Retirer l'authentification lecteur ✅ fait (commit `c5c074b`)
 
 Décision prise : **il n'y a pas de login lecteur.** Tout le contenu est en lecture publique,
 et la seule règle d'accès est le statut de publication. Le seul compte du site est l'admin,
 qui se connecte par magic link — mécanisme indépendant de tout ce qui suit.
 
-### 4.1 — Socle WebAuthn / mot de passe
+### 4.1 — Socle WebAuthn / mot de passe — retiré
 
 Posé mais totalement inerte : aucune route, aucun contrôleur, aucun appel à `Auth::login()`.
 `ArquanziaGuard` référence même en commentaire un `RememberLoginService` qui n'existe pas.
@@ -226,7 +226,7 @@ Posé mais totalement inerte : aucune route, aucun contrôleur, aucun appel à `
   `create_remember_logins_table` — remplacées par des migrations de retrait, les tables
   existant déjà en production
 
-### 4.2 — Préférences de lecture côté serveur
+### 4.2 — Préférences de lecture côté serveur — retirées
 
 Découverte en vérifiant la portée de la décision : **ce stack est une boucle fermée.**
 `ReaderPreferenceController` renvoie 401 à tout visiteur non connecté — donc à tous les
@@ -241,7 +241,7 @@ gère déjà la taille de police et la police dyslexique **entièrement en `loca
 À conserver : la conversion pourcentage ↔ pixels si les exports PDF/EPUB s'en servent — à
 vérifier, `DownloadController` lit `font` et `size` directement depuis la requête.
 
-### 4.3 — `ViewerResolver` et les paliers résiduels
+### 4.3 — `ViewerResolver` et les paliers résiduels — retirés
 
 `ViewerResolver` retourne un tableau de sept clés dont six sont des constantes. Les conditions
 qui le consomment (`viewer_tier in ['reader','vip_reader']`, `is_banned`, `is_logged_in`) sont
@@ -249,6 +249,29 @@ mortes mais toujours écrites, dans `SearchController`, `EncyclopediaController`
 
 À retirer entièrement, en remplaçant les conditions par le seul filtre de publication. C'est
 ce qui débloque 0.6.
+
+### 4.4 — Deux pages cassées découvertes pendant le lot 4
+
+Ni le contrôle des noms de routes du lot 0, ni la compilation des vues ne pouvaient les
+détecter : ce sont des accès à des attributs disparus, invisibles avant l'exécution.
+
+- **`/admin/users`** lisait `$user->entitlements['vip']`. `entitlements` n'existant plus,
+  l'expression valait `null['vip']`, que le gestionnaire d'erreurs de Laravel transforme en
+  `ErrorException` — donc une 500, comme `/admin/users/{id}`.
+- **`/api/feed` et `/api/posts/{post}`** chargeaient les relations `reactions` et `comments` et
+  appelaient `toFeedArray()` et `isAccessibleBy()`, tous supprimés.
+
+L'API a été retirée plutôt que réparée : rien ne la consomme, le site est rendu côté serveur,
+et son contrat reposait entièrement sur un paramètre `viewer=vip|reader`.
+
+**Leçon pour le lot 2** : seuls des tests qui *rendent* réellement les pages attrapent cette
+classe de défaut. Les tests de fumée du lot 2.2 sont donc la priorité, pas un accessoire.
+
+### 4.5 — `posts.audience` retiré
+
+La colonne `audience` (`public`/`connected`/`vip`/`reader`) ne filtrait plus rien depuis la
+refonte, mais restait proposée au moment de la rédaction : un billet marqué « VIP »
+s'affichait publiquement. Une promesse de confidentialité que le site ne tenait pas.
 
 ---
 
