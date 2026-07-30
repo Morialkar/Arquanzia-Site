@@ -179,7 +179,7 @@ cd arquanzia-backend && php artisan test
 
 ---
 
-## Lot 2.5 — Tests d'écriture du back-office
+## Lot 2.5 — Tests d'écriture du back-office ✅ fait (commits `beed721`, `d78187d`)
 
 À faire **avant le lot 3** : sans ces tests, le pipeline validerait un back-office dont seules
 les pages de lecture sont vérifiées.
@@ -244,14 +244,35 @@ Priorités, du plus au moins rentable :
    archive valide crée l'arborescence attendue, une archive malformée est refusée sans rien
    écrire.
 
-### Points d'attention
+### Ce que le lot a révélé
 
-- Il faudra sans doute des fabriques supplémentaires : `PostMedia`, `EncyclopediaArticle`,
-  `EncyclopediaGalleryImage`, `FragmentItem`, `BookFile`, `ChapterFile`.
-- `assertDatabaseHas` sur des tables aux clés UUID fonctionne, mais il faut viser les colonnes
-  métier plutôt que les identifiants.
-- L'audit (`AuditLog`) est écrit par plusieurs contrôleurs : vérifier au moins une fois qu'une
-  écriture laisse une trace, puisque c'est le seul moyen de reconstituer un incident.
+- **L'import d'encyclopédie était entièrement cassé en production.**
+  `importAnalyze()` reconstruisait le chemin de l'archive à la main via
+  `storage_path('app/'.$zipPath)`, alors que depuis Laravel 11 la racine du disque `local`
+  est `storage/app/private`. Le fichier était écrit dans `storage/app/private/temp` et
+  cherché dans `storage/app/temp` : chaque import échouait sur « Impossible d'ouvrir le
+  fichier ZIP ». Corrigé — le chemin vient désormais du disque lui-même.
+- **Publier un chapitre plantait** sur deux services supprimés à la refonte, trouvé en
+  contre-validant la passe Pint. Le chapitre était bien publié, puis l'admin recevait une 500.
+
+### Limites assumées, documentées plutôt que masquées
+
+- **La CSRF n'est pas testable.** `ValidateCsrfToken` court-circuite sa vérification quand
+  `runningUnitTests()` est vrai, ce qui vaut pour toute la suite. Un test écrit malgré tout
+  passerait à vide et donnerait une fausse assurance. La protection reste active en
+  production, où la condition est fausse.
+- **Le téléversement de logo n'est pas couvert.** `SettingsController::updateLogo()` écrit
+  directement sur le disque via `UploadedFile::move()` et `ImageManager::save()`, sans passer
+  par la façade `Storage` : `Storage::fake()` ne peut pas l'intercepter et un test déposerait
+  de vrais fichiers dans le dépôt. À rendre testable en même temps que l'assainissement du
+  SVG prévu au lot 1.2. Seul son contrôle d'accès est vérifié.
+
+### Reste possible plus tard
+
+- Vérifier que les écritures laissent une trace dans `AuditLog`, seul moyen de reconstituer
+  un incident après coup.
+- Fabriques pour `EncyclopediaGalleryImage`, `FragmentItem`, `BookFile`, `ChapterFile`, si
+  des tests plus fins en ont besoin.
 
 ---
 
@@ -537,7 +558,7 @@ alimentée à l'enregistrement.
    passage. À faire avant les tests, sinon on écrit des tests sur du code à supprimer.
 3. **Lot 2** — le socle de tests et les tests de fumée, qui verrouillent les lots 0 et 4. ✅
 4. **Lot 2.5** — les tests d'écriture du back-office, avant de brancher le pipeline sur une
-   couverture qui ignore les 29 points d'écriture.
+   couverture qui ignore les 29 points d'écriture. ✅
 5. **Lot 3** — la migration GitHub et le pipeline, une fois qu'il y a des tests à y faire
    tourner.
 6. **Lot 3.5** — le flux RSS/Atom des sorties, petite victoire visible entre deux gros
