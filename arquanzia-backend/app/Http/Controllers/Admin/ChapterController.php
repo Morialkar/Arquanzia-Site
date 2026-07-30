@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Chapter;
-use App\Services\ChapterDeliveryService;
-use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -41,7 +39,6 @@ class ChapterController extends Controller
             'order_index' => $request->input('order_index'),
             'content_md' => $request->input('content_md'),
             'is_published' => $request->boolean('is_published'),
-            'is_public' => true,
             'published_at' => $request->input('published_at'),
         ]);
 
@@ -66,10 +63,8 @@ class ChapterController extends Controller
 
         $slug = $request->input('slug') ?: Str::slug($request->input('title'));
 
-        $wasPublished = $chapter->is_published;
         $nowPublished = $request->boolean('is_published');
         $publishedAt = $request->input('published_at');
-        $isNowAvailable = $nowPublished && (! $publishedAt || now()->gte($publishedAt));
 
         $chapter->update([
             'title' => $request->input('title'),
@@ -77,35 +72,12 @@ class ChapterController extends Controller
             'order_index' => $request->input('order_index'),
             'content_md' => $request->input('content_md'),
             'is_published' => $nowPublished,
-            'is_public' => true,
             'published_at' => $publishedAt,
             'promo_banner_enabled' => $request->boolean('promo_banner_enabled'),
             'promo_banner_text' => $request->input('promo_banner_text'),
             'promo_banner_button_label' => $request->input('promo_banner_button_label'),
             'promo_banner_button_url' => $request->input('promo_banner_button_url'),
         ]);
-
-        // Trigger deliveries and notifications if chapter just became available
-        if (! $wasPublished && $isNowAvailable) {
-            $deliveryService = app(ChapterDeliveryService::class);
-            $notificationService = app(NotificationService::class);
-
-            $jobsCreated = $deliveryService->dispatchForChapter($chapter);
-            $notificationsCreated = $notificationService->notifyNewChapter($chapter);
-
-            $messages = [];
-            if ($jobsCreated > 0) {
-                $messages[] = "{$jobsCreated} livraisons";
-            }
-            if ($notificationsCreated > 0) {
-                $messages[] = "{$notificationsCreated} notifications";
-            }
-
-            if (! empty($messages)) {
-                return redirect()->route('admin.books.edit', $book)
-                    ->with('success', 'Chapitre publié. '.implode(' + ', $messages).' programmées.');
-            }
-        }
 
         return redirect()->route('admin.books.edit', $book)->with('success', 'Chapitre mis à jour');
     }
