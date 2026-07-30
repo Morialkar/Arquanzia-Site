@@ -300,6 +300,43 @@ Décision prise : le dépôt passe sur GitHub, qui fournit les runners.
 
 ---
 
+## Lot 3.5 — Flux RSS/Atom des sorties
+
+Permettre de suivre les sorties de chapitres **sans aucune inscription** : c'est le cas
+d'usage natif de RSS, et sur un site rendu côté serveur, le coût est minime — une route, un
+gabarit à la manière de `sitemap.blade.php`, le scope `published()` déjà testé partout.
+
+### Contenu
+
+- `/flux/chapitres.xml` (Atom) : les derniers chapitres publiés, du livre publié uniquement.
+- Éventuellement `/flux/fil.xml` pour les billets, si le premier flux fait ses preuves.
+- **Texte complet dans le flux** — décision prise : le contenu est déjà public, un agrégateur
+  n'est qu'un navigateur de plus, et la licence s'applique pareil. Le bandeau promotionnel du
+  chapitre est rendu en fin d'entrée, pour que la promo voyage avec le texte.
+- Balise `<link rel="alternate" type="application/atom+xml">` dans le gabarit public pour la
+  découverte automatique.
+
+### Points techniques
+
+- Tout en URL absolues dans le HTML du flux : images, wikilinks, liens internes. C'est le
+  vrai travail du lot — le rendu actuel produit des chemins relatifs.
+- HTML autonome : pas de classes Tailwind porteuses de sens, pas de dépendance au CSS du site.
+- Dates de publication : `published_at` quand présent, sinon `created_at`.
+- Un chapitre dépublié doit sortir du flux — couvert par le même réflexe de test que le
+  lot 2.3.
+- Limiter le flux (20 dernières entrées) et poser un en-tête de cache raisonnable.
+
+### Extension sans code : l'infolettre
+
+Une fois le flux en place, un service RSS-vers-courriel (Buttondown, Mailchimp, Brevo…)
+peut envoyer automatiquement un courriel aux abonnés à chaque nouvelle entrée. Le service
+gère inscription, désabonnement et conformité (LCAP, Loi 25) ; le site n'héberge ni
+formulaire ni adresse. Refaire une infolettre maison recréerait le système de livraison
+supprimé à la refonte, conformité en plus — à éviter. Le choix du service appartient à
+Naomi, sans urgence, et ne demande aucun code côté site.
+
+---
+
 ## Lot 4 — Retirer l'authentification lecteur ✅ fait (commit `c5c074b`)
 
 Décision prise : **il n'y a pas de login lecteur.** Tout le contenu est en lecture publique,
@@ -447,9 +484,11 @@ alimentée à l'enregistrement.
    couverture qui ignore les 29 points d'écriture.
 5. **Lot 3** — la migration GitHub et le pipeline, une fois qu'il y a des tests à y faire
    tourner.
-5. **Lot 5.1** — les assets, qui débloquent le job de build et la CSP.
-6. **Lot 1** — le reste des correctifs de sécurité, CSP comprise.
-7. **Lot 5** — le reste de la dette, au fil de l'eau.
+6. **Lot 3.5** — le flux RSS/Atom des sorties, petite victoire visible entre deux gros
+   chantiers, et fondation d'une éventuelle infolettre sans code.
+7. **Lot 5.1** — les assets, qui débloquent le job de build et la CSP.
+8. **Lot 1** — le reste des correctifs de sécurité, CSP comprise.
+9. **Lot 5** — le reste de la dette, au fil de l'eau.
 
 À noter : les lots 0 et 4 touchent beaucoup les mêmes fichiers (`ViewerResolver`,
 `SearchController`, les vues admin). Les enchaîner évite de repasser deux fois dessus.
