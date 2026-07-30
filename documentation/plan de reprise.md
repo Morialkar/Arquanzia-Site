@@ -175,8 +175,79 @@ cd arquanzia-backend && php artisan test
   options : un commit dédié « formatage seul » avant de brancher la CI, ou retirer Pint du
   pipeline. Décision à prendre avec Naomi — 45 fichiers de diff, même purement cosmétique,
   ça se valide.
-- Aucun test sur les écritures du back-office (création et modification de livres, chapitres,
-  entrées d'encyclopédie, fragments). Les tests de fumée ne couvrent que les `GET`.
+- Les écritures du back-office ne sont pas testées. Promu au lot 2.5 ci-dessous.
+
+---
+
+## Lot 2.5 — Tests d'écriture du back-office
+
+À faire **avant le lot 3** : sans ces tests, le pipeline validerait un back-office dont seules
+les pages de lecture sont vérifiées.
+
+### Pourquoi ce lot existe
+
+Le lot 2 couvre les 26 écrans du back-office en lecture, et c'est ce qui a révélé cinq pages
+en erreur 500. Mais **29 points d'écriture** ne sont couverts par rien, alors que ce sont eux
+qui touchent les données. Un défaut y est plus grave qu'une page blanche : il corrompt ou
+détruit du contenu, et rien ne le signale avant qu'il soit trop tard.
+
+Le risque est concret vu l'historique : la refonte a laissé des vues appelant des routes
+disparues et des contrôleurs lisant des attributs supprimés. Les formulaires d'écriture ont
+subi les mêmes retraits — `audience` vient d'être retiré de `PostController`, la validation de
+`visibility` a été remplacée par `is_published` — sans qu'aucun test ne confirme que
+l'enregistrement fonctionne encore.
+
+### Surface à couvrir
+
+| Ressource | Écritures |
+|---|---|
+| Billets | créer, modifier, supprimer (avec `SoftDeletes`) |
+| Livres | créer, modifier, supprimer |
+| Chapitres | créer, modifier, supprimer |
+| Encyclopédie | créer, modifier, supprimer, supprimer une image de galerie |
+| Fragments | créer, modifier, supprimer |
+| Wikilinks | créer, modifier, supprimer |
+| Utilisateurs | créer |
+| Administrateurs | ajouter, retirer |
+| Réglages | logo (téléverser, supprimer), nom du site |
+| Import d'encyclopédie | analyser, exécuter |
+
+### Ce que chaque test doit vérifier
+
+Pas seulement un code de retour : **l'effet en base**. Le schéma attendu est
+« requête → redirection → `assertDatabaseHas` / `assertDatabaseMissing` ».
+
+Priorités, du plus au moins rentable :
+
+1. **Le chemin heureux de chaque ressource** — créer puis modifier, et vérifier que les champs
+   arrivent réellement en base. C'est ce qui attraperait un champ retiré du `$fillable` ou une
+   validation devenue incohérente avec le formulaire.
+2. **Le contrôle d'accès** — chaque écriture sans session admin doit être refusée, et ne rien
+   modifier. Vingt-neuf points d'entrée, aucun test : c'est le trou le plus large.
+3. **La protection CSRF** — vérifier qu'une écriture sans jeton est rejetée. Attention, les
+   tests Laravel désactivent le middleware CSRF par défaut ; il faut le réactiver
+   explicitement pour ce cas, sinon le test ne prouve rien.
+4. **Les suppressions** — ce sont les opérations irréversibles. Vérifier qu'une suppression de
+   livre emporte bien ses chapitres (`cascadeOnDelete`) et que la suppression d'un billet est
+   bien logique et non définitive (`SoftDeletes`).
+5. **Le rejet des entrées invalides** — champ obligatoire manquant, slug en doublon,
+   `is_published` absent. Vérifier qu'on obtient des erreurs de validation et **aucune**
+   écriture partielle.
+6. **Les téléversements** — `Storage::fake()` et `UploadedFile::fake()` pour le logo et les
+   couvertures. À croiser avec le point de sécurité 1.2 sur le SVG brut : un test qui
+   documente le comportement actuel facilitera l'assainissement.
+7. **L'import d'encyclopédie** — le plus complexe, à garder pour la fin. Au minimum : une
+   archive valide crée l'arborescence attendue, une archive malformée est refusée sans rien
+   écrire.
+
+### Points d'attention
+
+- Il faudra sans doute des fabriques supplémentaires : `PostMedia`, `EncyclopediaArticle`,
+  `EncyclopediaGalleryImage`, `FragmentItem`, `BookFile`, `ChapterFile`.
+- `assertDatabaseHas` sur des tables aux clés UUID fonctionne, mais il faut viser les colonnes
+  métier plutôt que les identifiants.
+- L'audit (`AuditLog`) est écrit par plusieurs contrôleurs : vérifier au moins une fois qu'une
+  écriture laisse une trace, puisque c'est le seul moyen de reconstituer un incident.
 
 ---
 
@@ -371,8 +442,10 @@ alimentée à l'enregistrement.
    serveur en premier, c'est une variable à changer, pas du code à écrire.
 2. **Lot 4** — le retrait de l'authentification lecteur et des paliers, qui règle 0.6 au
    passage. À faire avant les tests, sinon on écrit des tests sur du code à supprimer.
-3. **Lot 2** — le socle de tests et les tests de fumée, qui verrouillent les lots 0 et 4.
-4. **Lot 3** — la migration GitHub et le pipeline, une fois qu'il y a des tests à y faire
+3. **Lot 2** — le socle de tests et les tests de fumée, qui verrouillent les lots 0 et 4. ✅
+4. **Lot 2.5** — les tests d'écriture du back-office, avant de brancher le pipeline sur une
+   couverture qui ignore les 29 points d'écriture.
+5. **Lot 3** — la migration GitHub et le pipeline, une fois qu'il y a des tests à y faire
    tourner.
 5. **Lot 5.1** — les assets, qui débloquent le job de build et la CSP.
 6. **Lot 1** — le reste des correctifs de sécurité, CSP comprise.
