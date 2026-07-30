@@ -10,6 +10,7 @@ use App\Models\PostMedia;
 use App\Services\EncyclopediaImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -211,8 +212,11 @@ class EncyclopediaController extends Controller
             'zip_file' => 'required|file|mimes:zip|max:51200',
         ]);
 
+        // Le chemin absolu doit venir du disque lui-même : depuis Laravel 11 la racine du
+        // disque « local » est storage/app/private, et le reconstruire à la main visait
+        // storage/app/temp — un dossier où le fichier n'a jamais été écrit.
         $zipPath = $request->file('zip_file')->store('temp');
-        $fullPath = storage_path('app/'.$zipPath);
+        $fullPath = Storage::disk('local')->path($zipPath);
 
         $service = new EncyclopediaImportService;
         $analysis = $service->analyzeZip($fullPath);
