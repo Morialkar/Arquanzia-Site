@@ -60,14 +60,15 @@ class EncyclopediaNode extends Model
 
     public function isDraft(): bool
     {
-        return !$this->is_published;
+        return ! $this->is_published;
     }
 
     public function getTeaserHtmlAttribute(): ?string
     {
-        if (!$this->teaser_md) {
+        if (! $this->teaser_md) {
             return null;
         }
+
         return \App\Helpers\MarkdownHelper::render($this->teaser_md);
     }
 
@@ -75,12 +76,12 @@ class EncyclopediaNode extends Model
     {
         $path = [$this->slug];
         $node = $this;
-        
+
         while ($node->parent) {
             $node = $node->parent;
             array_unshift($path, $node->slug);
         }
-        
+
         return implode('/', $path);
     }
 
@@ -88,12 +89,12 @@ class EncyclopediaNode extends Model
     {
         $ancestors = [];
         $node = $this->parent;
-        
+
         while ($node) {
             array_unshift($ancestors, $node);
             $node = $node->parent;
         }
-        
+
         return $ancestors;
     }
 

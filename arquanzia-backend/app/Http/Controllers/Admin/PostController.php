@@ -69,6 +69,7 @@ class PostController extends Controller
     public function edit(Post $post): View
     {
         $post->load('media');
+
         return view('admin.posts.edit', compact('post'));
     }
 
@@ -104,12 +105,12 @@ class PostController extends Controller
         ]);
 
         // Send notifications if just became announcement
-        if (!$wasAnnouncement && $isNowAnnouncement) {
+        if (! $wasAnnouncement && $isNowAnnouncement) {
             $notificationService = app(NotificationService::class);
             $notificationService->notifyAnnouncement($post);
         }
 
-        if (!empty($validated['delete_media'])) {
+        if (! empty($validated['delete_media'])) {
             foreach ($post->media()->whereIn('id', $validated['delete_media'])->get() as $media) {
                 $this->mediaService->delete($media);
             }

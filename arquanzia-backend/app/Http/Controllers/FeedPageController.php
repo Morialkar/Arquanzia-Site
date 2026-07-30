@@ -37,7 +37,7 @@ class FeedPageController extends Controller
 
         return view('feed.show', [
             'post' => $post,
-            'ogTitle' => $post->title . ' — Arquanzia',
+            'ogTitle' => $post->title.' — Arquanzia',
             'ogDescription' => $post->preview_text ? \Illuminate\Support\Str::limit(strip_tags($post->preview_text), 160) : null,
             'ogImage' => $ogImage,
         ]);

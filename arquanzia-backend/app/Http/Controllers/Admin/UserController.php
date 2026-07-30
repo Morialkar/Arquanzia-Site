@@ -19,7 +19,7 @@ class UserController extends Controller
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('handle', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -53,7 +53,7 @@ class UserController extends Controller
         ]);
 
         $email = $request->input('email');
-        $handle = $request->input('handle') ?: 'user_' . substr(md5($email), 0, 8);
+        $handle = $request->input('handle') ?: 'user_'.substr(md5($email), 0, 8);
 
         $user = User::create([
             'email' => $email,

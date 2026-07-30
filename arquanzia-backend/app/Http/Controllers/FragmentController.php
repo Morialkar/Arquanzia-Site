@@ -27,7 +27,7 @@ class FragmentController extends Controller
             abort(404);
         }
 
-        if (!$node || !$node->is_published) {
+        if (! $node || ! $node->is_published) {
             abort(404);
         }
 
@@ -66,7 +66,7 @@ class FragmentController extends Controller
 
             $node = $query->first();
 
-            if (!$node) {
+            if (! $node) {
                 return null;
             }
 

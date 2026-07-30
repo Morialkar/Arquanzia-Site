@@ -40,9 +40,10 @@ class Post extends Model
 
     public function getContentFullHtmlAttribute(): ?string
     {
-        if (!$this->content_full) {
+        if (! $this->content_full) {
             return null;
         }
+
         return \App\Helpers\MarkdownHelper::render($this->content_full);
     }
 }

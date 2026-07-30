@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class EncyclopediaArticle extends Model
 {
     protected $primaryKey = 'node_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -35,9 +37,10 @@ class EncyclopediaArticle extends Model
 
     public function getContentHtmlAttribute(): ?string
     {
-        if (!$this->content_md) {
+        if (! $this->content_md) {
             return null;
         }
+
         return \App\Helpers\MarkdownHelper::render($this->content_md);
     }
 }

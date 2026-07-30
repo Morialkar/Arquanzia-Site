@@ -24,7 +24,7 @@ class LibraryController extends Controller
 
         if ($publishedChapters->count() === 1) {
             $solo = $publishedChapters->first();
-            if (!$solo->isComingSoon()) {
+            if (! $solo->isComingSoon()) {
                 return redirect()->route('library.chapter', [$book->slug, $solo->slug]);
             }
         }
@@ -36,7 +36,7 @@ class LibraryController extends Controller
 
         return view('library.book', [
             'book' => $book,
-            'ogTitle' => $book->title . ' — Bibliothèque · Arquanzia',
+            'ogTitle' => $book->title.' — Bibliothèque · Arquanzia',
             'ogDescription' => $ogDescription,
             'ogImage' => $ogImage,
         ]);
@@ -68,20 +68,24 @@ class LibraryController extends Controller
             ->orderBy('order_index', 'asc')
             ->first();
 
-        if ($prevChapter?->isComingSoon()) $prevChapter = null;
-        if ($nextChapter?->isComingSoon()) $nextChapter = null;
+        if ($prevChapter?->isComingSoon()) {
+            $prevChapter = null;
+        }
+        if ($nextChapter?->isComingSoon()) {
+            $nextChapter = null;
+        }
 
         $book->load('cover');
         $ogImage = $book->cover ? route('media.show', $book->cover->id) : null;
 
         return view('library.chapter', [
-            'book'        => $book,
-            'chapter'     => $chapter,
+            'book' => $book,
+            'chapter' => $chapter,
             'prevChapter' => $prevChapter,
             'nextChapter' => $nextChapter,
-            'ogTitle'     => $chapter->title . ' — ' . $book->title . ' · Arquanzia',
-            'ogDescription' => 'Chapitre de ' . $book->title . ' dans la Bibliothèque d\'Arquanzia.',
-            'ogImage'     => $ogImage,
+            'ogTitle' => $chapter->title.' — '.$book->title.' · Arquanzia',
+            'ogDescription' => 'Chapitre de '.$book->title.' dans la Bibliothèque d\'Arquanzia.',
+            'ogImage' => $ogImage,
         ]);
     }
 }

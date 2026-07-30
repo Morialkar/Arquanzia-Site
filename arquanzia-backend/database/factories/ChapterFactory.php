@@ -20,7 +20,7 @@ class ChapterFactory extends Factory
 
         return [
             'book_id' => Book::factory(),
-            'slug' => Str::slug($title) . '-' . $this->faker->unique()->numberBetween(1, 99999),
+            'slug' => Str::slug($title).'-'.$this->faker->unique()->numberBetween(1, 99999),
             'title' => $title,
             'order_index' => 0,
             'content_md' => $this->faker->paragraphs(2, true),

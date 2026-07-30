@@ -161,7 +161,7 @@ class EncyclopediaController extends Controller
             // Update existing gallery images captions and downloadable options
             $captions = $request->input('gallery_caption', []);
             $downloadable = $request->input('gallery_downloadable', []);
-            
+
             foreach ($encyclopedium->article->gallery as $image) {
                 $image->update([
                     'caption' => $captions[$image->id] ?? null,
@@ -176,18 +176,20 @@ class EncyclopediaController extends Controller
     public function destroy(EncyclopediaNode $encyclopedium): RedirectResponse
     {
         $encyclopedium->delete();
+
         return redirect()->route('admin.encyclopedia.index')->with('success', 'Élément supprimé');
     }
 
     public function deleteGalleryImage(EncyclopediaNode $encyclopedium, EncyclopediaGalleryImage $image): RedirectResponse
     {
         $image->delete();
+
         return back()->with('success', 'Image supprimée');
     }
 
     protected function uploadMedia($file): string
     {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
         $file->storeAs('media/original', $filename);
 
         $media = PostMedia::create([
@@ -210,9 +212,9 @@ class EncyclopediaController extends Controller
         ]);
 
         $zipPath = $request->file('zip_file')->store('temp');
-        $fullPath = storage_path('app/' . $zipPath);
+        $fullPath = storage_path('app/'.$zipPath);
 
-        $service = new EncyclopediaImportService();
+        $service = new EncyclopediaImportService;
         $analysis = $service->analyzeZip($fullPath);
 
         session(['import_zip_path' => $fullPath]);
@@ -226,8 +228,8 @@ class EncyclopediaController extends Controller
     public function importExecute(Request $request): RedirectResponse
     {
         $zipPath = session('import_zip_path');
-        
-        if (!$zipPath || !file_exists($zipPath)) {
+
+        if (! $zipPath || ! file_exists($zipPath)) {
             return redirect()->route('admin.encyclopedia.import')
                 ->withErrors(['zip_file' => 'Session expirée, veuillez réuploader le fichier.']);
         }
@@ -235,16 +237,16 @@ class EncyclopediaController extends Controller
         $conflictMode = $request->input('conflict_mode', 'overwrite');
         $skipPaths = $request->input('skip', []);
 
-        $service = new EncyclopediaImportService();
-        
+        $service = new EncyclopediaImportService;
+
         try {
             $result = $service->import($zipPath, $conflictMode, $skipPaths);
-            
+
             @unlink($zipPath);
             session()->forget('import_zip_path');
 
             $createdCount = count($result['created']);
-            $updatedCount = count(array_filter($result['imported'], fn($i) => ($i['action'] ?? '') === 'updated'));
+            $updatedCount = count(array_filter($result['imported'], fn ($i) => ($i['action'] ?? '') === 'updated'));
             $skippedCount = count($result['conflicts']);
 
             return redirect()->route('admin.encyclopedia.index')

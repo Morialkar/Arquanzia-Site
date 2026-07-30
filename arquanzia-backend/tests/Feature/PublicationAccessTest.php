@@ -89,7 +89,7 @@ class PublicationAccessTest extends TestCase
         $category = EncyclopediaNode::factory()->category()->draft()->create();
         $child = EncyclopediaNode::factory()->create(['parent_id' => $category->id]);
 
-        $this->get(route('encyclopedia.show', $category->slug . '/' . $child->slug, false))
+        $this->get(route('encyclopedia.show', $category->slug.'/'.$child->slug, false))
             ->assertNotFound();
     }
 

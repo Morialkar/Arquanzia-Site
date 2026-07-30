@@ -84,13 +84,14 @@ class Wikilink extends Model
     public static function resolveUrl(string $term): ?string
     {
         $target = static::resolveTarget($term);
+
         return $target['url'] ?? null;
     }
 
     protected static function extractTeaser(EncyclopediaNode $node): ?string
     {
         $teaser = $node->teaser_html;
-        if (!$teaser && $node->article?->content_md) {
+        if (! $teaser && $node->article?->content_md) {
             $teaser = Str::limit(strip_tags($node->article->content_md), 140);
         }
 

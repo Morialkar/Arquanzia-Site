@@ -152,12 +152,13 @@ class FragmentController extends Controller
     public function destroy(FragmentNode $fragment): RedirectResponse
     {
         $fragment->delete();
+
         return redirect()->route('admin.fragments.index')->with('success', 'Fragment supprimé');
     }
 
     protected function uploadMedia($file): string
     {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
         $file->storeAs('media/original', $filename);
 
         $media = PostMedia::create([

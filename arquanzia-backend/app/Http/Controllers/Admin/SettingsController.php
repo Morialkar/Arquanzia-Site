@@ -8,8 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class SettingsController extends Controller
 {
@@ -19,8 +19,8 @@ class SettingsController extends Controller
         $siteName = SiteSetting::getSiteName();
 
         return view('admin.settings.index', [
-            'logoPath'             => $logoPath,
-            'siteName'             => $siteName,
+            'logoPath' => $logoPath,
+            'siteName' => $siteName,
         ]);
     }
 
@@ -37,32 +37,32 @@ class SettingsController extends Controller
 
         $file = $request->file('logo');
         $extension = strtolower($file->getClientOriginalExtension());
-        
+
         if ($extension === 'svg') {
-            $filename = 'logos/logo_' . time() . '_' . bin2hex(random_bytes(4)) . '.svg';
-            
-            if (!is_dir(storage_path('app/public/logos'))) {
+            $filename = 'logos/logo_'.time().'_'.bin2hex(random_bytes(4)).'.svg';
+
+            if (! is_dir(storage_path('app/public/logos'))) {
                 mkdir(storage_path('app/public/logos'), 0755, true);
             }
-            
+
             $file->move(storage_path('app/public/logos'), basename($filename));
             $path = $filename;
         } else {
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
             $image = $manager->read($file->getRealPath());
             $image->trim();
-            
-            $filename = 'logos/logo_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
-            $fullPath = storage_path('app/public/' . $filename);
-            
-            if (!is_dir(dirname($fullPath))) {
+
+            $filename = 'logos/logo_'.time().'_'.bin2hex(random_bytes(4)).'.'.$extension;
+            $fullPath = storage_path('app/public/'.$filename);
+
+            if (! is_dir(dirname($fullPath))) {
                 mkdir(dirname($fullPath), 0755, true);
             }
-            
+
             $image->save($fullPath);
             $path = $filename;
         }
-        
+
         SiteSetting::set('site_logo', $path);
 
         return back()->with('success', 'Logo mis à jour');
@@ -92,11 +92,11 @@ class SettingsController extends Controller
 
     private function trimSvgViewBox(string $svg): string
     {
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         @$dom->loadXML($svg);
-        
+
         $svgElement = $dom->getElementsByTagName('svg')->item(0);
-        if (!$svgElement) {
+        if (! $svgElement) {
             return $svg;
         }
 
@@ -186,7 +186,7 @@ class SettingsController extends Controller
             }
         }
 
-        if (!$found) {
+        if (! $found) {
             return $svg;
         }
 
@@ -222,7 +222,7 @@ class SettingsController extends Controller
             $cmd = $match[1];
             $params = trim($match[2]);
             $numbers = [];
-            
+
             if ($params !== '') {
                 preg_match_all('/[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/', $params, $numMatches);
                 $numbers = array_map('floatval', $numMatches[0]);
@@ -325,7 +325,7 @@ class SettingsController extends Controller
             }
         }
 
-        if (!$found) {
+        if (! $found) {
             return null;
         }
 
@@ -353,7 +353,7 @@ class SettingsController extends Controller
             }
         }
 
-        if (!$found) {
+        if (! $found) {
             return null;
         }
 

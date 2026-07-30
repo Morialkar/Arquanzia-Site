@@ -20,7 +20,7 @@ class FragmentNodeFactory extends Factory
         return [
             'parent_id' => null,
             'type' => 'item',
-            'slug' => Str::slug($title) . '-' . $this->faker->unique()->numberBetween(1, 99999),
+            'slug' => Str::slug($title).'-'.$this->faker->unique()->numberBetween(1, 99999),
             'title' => $title,
             'description_md' => $this->faker->sentence(),
             'order_index' => 0,

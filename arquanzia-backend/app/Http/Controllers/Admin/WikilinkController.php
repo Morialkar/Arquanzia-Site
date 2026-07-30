@@ -58,7 +58,7 @@ class WikilinkController extends Controller
     public function update(Request $request, Wikilink $wikilink): RedirectResponse
     {
         $request->validate([
-            'term' => 'required|string|max:255|unique:wikilinks,term,' . $wikilink->id,
+            'term' => 'required|string|max:255|unique:wikilinks,term,'.$wikilink->id,
             'encyclopedia_node_id' => 'nullable|uuid|exists:encyclopedia_nodes,id',
             'custom_url' => 'nullable|url|max:500',
         ]);
