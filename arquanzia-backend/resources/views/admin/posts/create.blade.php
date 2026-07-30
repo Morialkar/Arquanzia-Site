@@ -6,16 +6,6 @@
             @csrf
 
             <div class="mb-4">
-                <label for="audience" class="block text-sm font-medium text-gray-700 mb-1">Audience</label>
-                <select name="audience" id="audience" class="w-full px-4 py-2 border border-arq-amber/40 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <option value="public" {{ old('audience') === 'public' ? 'selected' : '' }}>Public</option>
-                    <option value="connected" {{ old('audience') === 'connected' ? 'selected' : '' }}>Connecté</option>
-                    <option value="vip" {{ old('audience') === 'vip' ? 'selected' : '' }}>VIP</option>
-                    <option value="reader" {{ old('audience') === 'reader' ? 'selected' : '' }}>Reader</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
                 <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
                 <input type="text" name="title" id="title" value="{{ old('title') }}" required
                     class="w-full px-4 py-2 border border-arq-amber/40 rounded-lg focus:ring-2 focus:ring-indigo-500">

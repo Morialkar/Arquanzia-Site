@@ -44,7 +44,6 @@ Route::get('/fragments/{path}', [\App\Http\Controllers\FragmentController::class
 
 Route::get('/recherche', [\App\Http\Controllers\SearchController::class, 'search'])->name('search');
 Route::get('/api/recherche', [\App\Http\Controllers\SearchController::class, 'api'])->name('search.api');
-Route::post('/api/reader-preferences', [\App\Http\Controllers\ReaderPreferenceController::class, 'store'])->name('api.reader.preferences');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');

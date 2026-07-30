@@ -3,20 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\EncyclopediaNode;
-use App\Services\ViewerResolver;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class EncyclopediaController extends Controller
 {
-    public function __construct(
-        protected ViewerResolver $viewerResolver
-    ) {}
-
-    public function index(Request $request): View
+    public function index(): View
     {
-        $context = $this->viewerResolver->resolve($request);
-
         $nodes = EncyclopediaNode::roots()
             ->published()
             ->with(['children' => fn ($query) => $query->published(), 'article', 'thumbnail'])
@@ -24,15 +16,13 @@ class EncyclopediaController extends Controller
 
         return view('encyclopedia.index', [
             'nodes' => $nodes,
-            'context' => $context,
         ]);
     }
 
-    public function show(Request $request, string $path): View
+    public function show(string $path): View
     {
-        $context = $this->viewerResolver->resolve($request);
         $segments = explode('/', $path);
-        
+
         $node = $this->resolveNodeByPath($segments);
 
         if (!$node) {
@@ -46,7 +36,6 @@ class EncyclopediaController extends Controller
                 'node' => $node,
                 'children' => $children,
                 'ancestors' => $node->ancestors(),
-                'context' => $context,
             ]);
         }
 
@@ -62,8 +51,6 @@ class EncyclopediaController extends Controller
         return view('encyclopedia.article', [
             'node' => $node,
             'ancestors' => $node->ancestors(),
-            'context' => $context,
-            'hasAccess' => true,
             'ogTitle' => $node->title . ' — Encyclopédie · Arquanzia',
             'ogDescription' => $ogDescription,
             'ogImage' => $ogImage,

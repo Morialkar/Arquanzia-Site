@@ -40,42 +40,14 @@
                     dark:bg-arq-night dark:border-arq-mint/20 dark:shadow-lg/10">
                     <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60 mb-1">Handle</p>
+                            <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60 mb-1">Pseudo</p>
                             <h2 class="font-serif text-2xl text-arq-forest dark:text-arq-mint break-words">{{ $user->handle }}</h2>
-                            <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60 mt-4 mb-1">Email</p>
+                            <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60 mt-4 mb-1">Courriel</p>
                             <p class="text-sm text-arq-bark/80 dark:text-arq-mint/80 break-words">{{ $user->email ?? '-' }}</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 sm:gap-6 text-sm text-arq-bark/80 dark:text-arq-mint/80">
-                            <div class="space-y-1">
-                                <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60">{{ config('tiers.labels.vip') }}</p>
-                                @if($user->entitlements['vip'])
-                                    <span class="inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 text-xs font-semibold dark:bg-purple-900/40 dark:text-purple-200">
-                                        ✓ {{ $user->entitlements['vip_ends_at']?->format('d/m/Y') }}
-                                    </span>
-                                @else
-                                    <span class="text-arq-bark/40 dark:text-arq-mint/30">—</span>
-                                @endif
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60">{{ config('tiers.labels.reader') }}</p>
-                                @if($user->entitlements['reader'])
-                                    <span class="inline-flex items-center rounded-full bg-arq-copper/10 text-arq-copper px-2 py-0.5 text-xs font-semibold dark:bg-arq-copper/30 dark:text-arq-parchment">
-                                        ✓ {{ $user->entitlements['reader_ends_at']?->format('d/m/Y') }}
-                                    </span>
-                                @else
-                                    <span class="text-arq-bark/40 dark:text-arq-mint/30">—</span>
-                                @endif
-                            </div>
-                            <div class="col-span-2 sm:col-span-1">
-                                <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60 mb-1">Statut</p>
-                                @if($user->accessControl?->is_banned)
-                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold dark:bg-red-900/40 dark:text-red-200">Banni</span>
-                                @elseif($user->accessControl?->is_readonly)
-                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold dark:bg-yellow-900/30 dark:text-yellow-200">Readonly</span>
-                                @else
-                                    <span class="px-2 py-1 bg-arq-mint/30 text-arq-forest rounded-full text-xs font-semibold dark:bg-arq-mint/20 dark:text-arq-mint">Actif</span>
-                                @endif
-                            </div>
+                        <div class="text-sm text-arq-bark/80 dark:text-arq-mint/80">
+                            <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-arq-mint/60 mb-1">Créé le</p>
+                            <p>{{ $user->created_at->format('d/m/Y') }}</p>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center justify-end">

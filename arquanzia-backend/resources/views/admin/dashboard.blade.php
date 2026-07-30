@@ -39,13 +39,7 @@
                                 {{ $post->title }}
                             </a>
                             <div class="text-sm text-arq-bark/60 dark:text-gray-400">
-                                <span class="px-2 py-0.5 rounded text-xs 
-                                    {{ $post->audience === 'public' ? 'bg-arq-mint/30 text-arq-forest' : '' }}
-                                    {{ $post->audience === 'connected' ? 'bg-arq-forest/10 text-arq-forest' : '' }}
-                                    {{ $post->audience === 'vip' ? 'bg-purple-100 text-purple-700' : '' }}
-                                    {{ $post->audience === 'reader' ? 'bg-arq-amber/30 text-arq-bark' : '' }}
-                                ">{{ $post->audience }}</span>
-                                · {{ $post->created_at->diffForHumans() }}
+                                {{ $post->created_at->diffForHumans() }}
                             </div>
                         </div>
                         <a href="{{ route('admin.posts.edit', $post) }}" class="text-arq-forest dark:text-arq-mint hover:text-arq-forest-light dark:hover:text-arq-mint/80 text-sm">Modifier</a>

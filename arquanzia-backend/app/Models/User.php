@@ -2,40 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 
-class User extends Model implements Authenticatable
+/**
+ * Un compte ne sert qu'à l'accès au back-office : le site n'a pas de login lecteur et tout le
+ * contenu est en lecture publique. L'authentification passe par un lien magique et la session,
+ * sans mot de passe ni contrat Authenticatable.
+ */
+class User extends Model
 {
     use HasFactory, HasUuids;
 
     protected $fillable = [
         'handle',
         'email',
-        'notification_prefs',
-        'theme_pref',
-        'reader_font',
-        'reader_font_size',
-    ];
-
-    protected $hidden = ['password'];
-
-    public function getAuthIdentifierName(): string { return 'id'; }
-    public function getAuthIdentifier(): mixed { return $this->id; }
-    public function getAuthPassword(): string { return $this->password ?? ''; }
-    public function getAuthPasswordName(): string { return 'password'; }
-    public function getRememberToken(): ?string { return null; }
-    public function setRememberToken($value): void {}
-    public function getRememberTokenName(): string { return ''; }
-
-    protected $casts = [
-        'notification_prefs' => 'array',
-        'reader_font_size' => 'integer',
     ];
 
     public function posts(): HasMany

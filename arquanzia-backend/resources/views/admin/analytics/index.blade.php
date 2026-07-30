@@ -4,7 +4,7 @@
             <p class="text-xs uppercase tracking-[0.2em] text-arq-bark/50 dark:text-arq-mint/60">Système</p>
             <h1 class="font-serif text-3xl font-semibold text-arq-forest dark:text-arq-mint">📊 Analytique</h1>
         </div>
-        <p class="text-sm text-arq-bark/70 dark:text-arq-mint/70">Vue d’ensemble des audiences et contenus.</p>
+        <p class="text-sm text-arq-bark/70 dark:text-arq-mint/70">Vue d’ensemble du trafic et des contenus.</p>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

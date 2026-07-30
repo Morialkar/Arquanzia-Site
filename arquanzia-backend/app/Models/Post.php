@@ -15,7 +15,6 @@ class Post extends Model
 
     protected $fillable = [
         'author_user_id',
-        'audience',
         'title',
         'preview_text',
         'content_full',
@@ -25,7 +24,6 @@ class Post extends Model
     ];
 
     protected $casts = [
-        'audience' => 'string',
         'is_pinned' => 'boolean',
         'is_announcement' => 'boolean',
     ];

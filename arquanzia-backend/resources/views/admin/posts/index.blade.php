@@ -18,15 +18,6 @@
                         </div>
                         <div class="flex flex-wrap gap-3">
                             <div>
-                                <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-gray-400 mb-1">Audience</p>
-                                <span class="px-2 py-1 rounded text-xs font-medium
-                                    {{ $post->audience === 'public' ? 'bg-arq-mint/30 text-arq-forest' : '' }}
-                                    {{ $post->audience === 'connected' ? 'bg-arq-forest/10 text-arq-forest' : '' }}
-                                    {{ $post->audience === 'vip' ? 'bg-purple-100 text-purple-700' : '' }}
-                                    {{ $post->audience === 'reader' ? 'bg-arq-amber/30 text-arq-bark' : '' }}
-                                ">{{ $post->audience }}</span>
-                            </div>
-                            <div>
                                 <p class="text-xs uppercase tracking-wide text-arq-bark/50 dark:text-gray-400 mb-1">Date</p>
                                 <p class="text-sm text-arq-bark/70 dark:text-gray-300">{{ $post->created_at->format('d/m/Y H:i') }}</p>
                             </div>

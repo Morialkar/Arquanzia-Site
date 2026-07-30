@@ -38,7 +38,6 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'preview_text' => 'required|string|max:500',
             'content_full' => 'nullable|string',
-            'audience' => 'required|in:public,connected,vip,reader',
             'images' => 'nullable|array',
             'images.*' => 'image|max:10240',
         ]);
@@ -54,7 +53,6 @@ class PostController extends Controller
             'title' => $validated['title'],
             'preview_text' => $validated['preview_text'],
             'content_full' => $validated['content_full'] ?? '',
-            'audience' => $validated['audience'],
         ]);
 
         if ($request->hasFile('images')) {
@@ -80,7 +78,6 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'preview_text' => 'required|string|max:500',
             'content_full' => 'nullable|string',
-            'audience' => 'required|in:public,connected,vip,reader',
             'images' => 'nullable|array',
             'images.*' => 'image|max:10240',
             'delete_media' => 'nullable|array',
@@ -101,7 +98,6 @@ class PostController extends Controller
             'title' => $validated['title'],
             'preview_text' => $validated['preview_text'],
             'content_full' => $validated['content_full'] ?? '',
-            'audience' => $validated['audience'],
             'is_pinned' => $request->boolean('is_pinned'),
             'pinned_section' => $request->boolean('is_pinned') ? $request->input('pinned_section', 'feed') : null,
             'is_announcement' => $isNowAnnouncement,
