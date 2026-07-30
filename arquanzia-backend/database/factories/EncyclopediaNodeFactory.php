@@ -20,7 +20,7 @@ class EncyclopediaNodeFactory extends Factory
         return [
             'parent_id' => null,
             'type' => 'article',
-            'slug' => Str::slug($title) . '-' . $this->faker->unique()->numberBetween(1, 99999),
+            'slug' => Str::slug($title).'-'.$this->faker->unique()->numberBetween(1, 99999),
             'title' => $title,
             'is_published' => true,
             'teaser_md' => $this->faker->sentence(),

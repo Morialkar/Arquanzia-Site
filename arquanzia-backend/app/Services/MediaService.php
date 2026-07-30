@@ -6,8 +6,8 @@ use App\Models\PostMedia;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class MediaService
 {
@@ -15,7 +15,7 @@ class MediaService
 
     public function __construct()
     {
-        $this->imageManager = new ImageManager(new Driver());
+        $this->imageManager = new ImageManager(new Driver);
     }
 
     public function store(UploadedFile $file, string $postId, int $position): PostMedia

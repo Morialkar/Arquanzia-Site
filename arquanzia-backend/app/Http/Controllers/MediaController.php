@@ -12,10 +12,10 @@ class MediaController extends Controller
     public function show(Request $request, PostMedia $media): StreamedResponse
     {
         $path = $media->filename
-            ? 'media/original/' . $media->filename
+            ? 'media/original/'.$media->filename
             : $media->original_path;
 
-        if (!$path || !Storage::disk('local')->exists($path)) {
+        if (! $path || ! Storage::disk('local')->exists($path)) {
             abort(404);
         }
 

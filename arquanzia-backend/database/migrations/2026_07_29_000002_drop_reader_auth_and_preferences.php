@@ -58,19 +58,19 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'password')) {
+            if (! Schema::hasColumn('users', 'password')) {
                 $table->string('password')->nullable();
             }
-            if (!Schema::hasColumn('users', 'reader_font')) {
+            if (! Schema::hasColumn('users', 'reader_font')) {
                 $table->string('reader_font')->nullable();
             }
-            if (!Schema::hasColumn('users', 'reader_font_size')) {
+            if (! Schema::hasColumn('users', 'reader_font_size')) {
                 $table->unsignedSmallInteger('reader_font_size')->nullable();
             }
-            if (!Schema::hasColumn('users', 'theme_pref')) {
+            if (! Schema::hasColumn('users', 'theme_pref')) {
                 $table->string('theme_pref')->nullable();
             }
-            if (!Schema::hasColumn('users', 'notification_prefs')) {
+            if (! Schema::hasColumn('users', 'notification_prefs')) {
                 $table->json('notification_prefs')->nullable();
             }
         });

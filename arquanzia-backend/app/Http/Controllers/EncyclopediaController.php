@@ -25,7 +25,7 @@ class EncyclopediaController extends Controller
 
         $node = $this->resolveNodeByPath($segments);
 
-        if (!$node) {
+        if (! $node) {
             abort(404);
         }
 
@@ -51,7 +51,7 @@ class EncyclopediaController extends Controller
         return view('encyclopedia.article', [
             'node' => $node,
             'ancestors' => $node->ancestors(),
-            'ogTitle' => $node->title . ' — Encyclopédie · Arquanzia',
+            'ogTitle' => $node->title.' — Encyclopédie · Arquanzia',
             'ogDescription' => $ogDescription,
             'ogImage' => $ogImage,
         ]);
@@ -74,7 +74,7 @@ class EncyclopediaController extends Controller
 
             $node = $query->first();
 
-            if (!$node) {
+            if (! $node) {
                 return null;
             }
 
@@ -83,6 +83,4 @@ class EncyclopediaController extends Controller
 
         return $node;
     }
-
-
 }

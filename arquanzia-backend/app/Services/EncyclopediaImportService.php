@@ -2,21 +2,23 @@
 
 namespace App\Services;
 
-use App\Models\EncyclopediaNode;
 use App\Models\EncyclopediaArticle;
-use Illuminate\Support\Str;
+use App\Models\EncyclopediaNode;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use ZipArchive;
 
 class EncyclopediaImportService
 {
     protected array $conflicts = [];
+
     protected array $imported = [];
+
     protected array $created = [];
 
     public function analyzeZip(string $zipPath): array
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
             throw new \Exception('Impossible d\'ouvrir le fichier ZIP.');
         }
@@ -26,7 +28,7 @@ class EncyclopediaImportService
 
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $filename = $zip->getNameIndex($i);
-            
+
             if (str_starts_with($filename, '__MACOSX') || str_starts_with(basename($filename), '.')) {
                 continue;
             }
@@ -38,7 +40,7 @@ class EncyclopediaImportService
                     'path' => $path,
                     'name' => basename($path),
                 ];
-                
+
                 $existing = $this->findNodeByPath($path);
                 if ($existing) {
                     $conflicts[] = [
@@ -53,7 +55,7 @@ class EncyclopediaImportService
                     'path' => $filename,
                     'name' => pathinfo($filename, PATHINFO_FILENAME),
                 ];
-                
+
                 $nodePath = $this->mdPathToNodePath($filename);
                 $existing = $this->findNodeByPath($nodePath);
                 if ($existing) {
@@ -72,14 +74,14 @@ class EncyclopediaImportService
         return [
             'structure' => $structure,
             'conflicts' => $conflicts,
-            'total_categories' => count(array_filter($structure, fn($s) => $s['type'] === 'category')),
-            'total_articles' => count(array_filter($structure, fn($s) => $s['type'] === 'article')),
+            'total_categories' => count(array_filter($structure, fn ($s) => $s['type'] === 'category')),
+            'total_articles' => count(array_filter($structure, fn ($s) => $s['type'] === 'article')),
         ];
     }
 
     public function import(string $zipPath, string $conflictMode = 'overwrite', array $skipPaths = []): array
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
             throw new \Exception('Impossible d\'ouvrir le fichier ZIP.');
         }
@@ -96,7 +98,7 @@ class EncyclopediaImportService
 
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $filename = $zip->getNameIndex($i);
-                
+
                 if (str_starts_with($filename, '__MACOSX') || str_starts_with(basename($filename), '.')) {
                     continue;
                 }
@@ -109,7 +111,7 @@ class EncyclopediaImportService
             }
 
             sort($directories);
-            
+
             foreach ($directories as $dirPath) {
                 $this->createCategoryFromPath($dirPath);
             }
@@ -126,9 +128,10 @@ class EncyclopediaImportService
                 if ($existing) {
                     if ($conflictMode === 'skip') {
                         $this->conflicts[] = ['path' => $filePath, 'action' => 'skipped'];
+
                         continue;
                     }
-                    
+
                     $this->updateArticle($existing, $content);
                     $this->imported[] = ['path' => $filePath, 'action' => 'updated', 'node_id' => $existing->id];
                 } else {
@@ -162,14 +165,14 @@ class EncyclopediaImportService
         foreach ($parts as $index => $part) {
             $slug = Str::slug($part);
             $currentPath = implode('/', array_slice($parts, 0, $index + 1));
-            
+
             $node = EncyclopediaNode::where('parent_id', $parentId)
                 ->where('slug', $slug)
                 ->first();
 
-            if (!$node) {
+            if (! $node) {
                 $maxOrder = EncyclopediaNode::where('parent_id', $parentId)->max('order_index') ?? 0;
-                
+
                 $node = EncyclopediaNode::create([
                     'parent_id' => $parentId,
                     'type' => 'category',
@@ -178,7 +181,7 @@ class EncyclopediaImportService
                     'is_published' => true,
                     'order_index' => $maxOrder + 1,
                 ]);
-                
+
                 $this->created[] = ['type' => 'category', 'path' => $currentPath, 'node_id' => $node->id];
             }
 
@@ -193,7 +196,7 @@ class EncyclopediaImportService
         $dir = dirname($filePath);
         $filename = pathinfo($filePath, PATHINFO_FILENAME);
         $slug = Str::slug($filename);
-        
+
         $parentId = null;
         if ($dir && $dir !== '.') {
             $parentNode = $this->createCategoryFromPath($dir);
@@ -255,9 +258,9 @@ class EncyclopediaImportService
         }
 
         $paragraphs = preg_split('/\n\n+/', trim($body));
-        if (!empty($paragraphs[0]) && strlen($paragraphs[0]) < 500) {
+        if (! empty($paragraphs[0]) && strlen($paragraphs[0]) < 500) {
             $firstPara = $paragraphs[0];
-            if (!str_starts_with($firstPara, '#') && !str_starts_with($firstPara, '```')) {
+            if (! str_starts_with($firstPara, '#') && ! str_starts_with($firstPara, '```')) {
                 $teaser = $firstPara;
             }
         }
@@ -280,7 +283,7 @@ class EncyclopediaImportService
                 ->where('slug', $slug)
                 ->first();
 
-            if (!$node) {
+            if (! $node) {
                 return null;
             }
 
@@ -293,12 +296,14 @@ class EncyclopediaImportService
     protected function mdPathToNodePath(string $mdPath): string
     {
         $path = preg_replace('/\.md$/i', '', $mdPath);
+
         return $path;
     }
 
     protected function slugToTitle(string $slug): string
     {
         $title = str_replace(['-', '_'], ' ', $slug);
+
         return ucfirst($title);
     }
 }

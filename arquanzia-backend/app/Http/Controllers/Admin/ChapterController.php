@@ -17,6 +17,7 @@ class ChapterController extends Controller
     public function create(Book $book): View
     {
         $nextOrder = $book->chapters()->max('order_index') + 1;
+
         return view('admin.chapters.create', ['book' => $book, 'nextOrder' => $nextOrder]);
     }
 
@@ -68,37 +69,41 @@ class ChapterController extends Controller
         $wasPublished = $chapter->is_published;
         $nowPublished = $request->boolean('is_published');
         $publishedAt = $request->input('published_at');
-        $isNowAvailable = $nowPublished && (!$publishedAt || now()->gte($publishedAt));
+        $isNowAvailable = $nowPublished && (! $publishedAt || now()->gte($publishedAt));
 
         $chapter->update([
-            'title'                    => $request->input('title'),
-            'slug'                     => $slug,
-            'order_index'              => $request->input('order_index'),
-            'content_md'               => $request->input('content_md'),
-            'is_published'             => $nowPublished,
-            'is_public'                => true,
-            'published_at'             => $publishedAt,
-            'promo_banner_enabled'     => $request->boolean('promo_banner_enabled'),
-            'promo_banner_text'        => $request->input('promo_banner_text'),
+            'title' => $request->input('title'),
+            'slug' => $slug,
+            'order_index' => $request->input('order_index'),
+            'content_md' => $request->input('content_md'),
+            'is_published' => $nowPublished,
+            'is_public' => true,
+            'published_at' => $publishedAt,
+            'promo_banner_enabled' => $request->boolean('promo_banner_enabled'),
+            'promo_banner_text' => $request->input('promo_banner_text'),
             'promo_banner_button_label' => $request->input('promo_banner_button_label'),
-            'promo_banner_button_url'  => $request->input('promo_banner_button_url'),
+            'promo_banner_button_url' => $request->input('promo_banner_button_url'),
         ]);
 
         // Trigger deliveries and notifications if chapter just became available
-        if (!$wasPublished && $isNowAvailable) {
+        if (! $wasPublished && $isNowAvailable) {
             $deliveryService = app(ChapterDeliveryService::class);
             $notificationService = app(NotificationService::class);
-            
+
             $jobsCreated = $deliveryService->dispatchForChapter($chapter);
             $notificationsCreated = $notificationService->notifyNewChapter($chapter);
-            
+
             $messages = [];
-            if ($jobsCreated > 0) $messages[] = "{$jobsCreated} livraisons";
-            if ($notificationsCreated > 0) $messages[] = "{$notificationsCreated} notifications";
-            
-            if (!empty($messages)) {
+            if ($jobsCreated > 0) {
+                $messages[] = "{$jobsCreated} livraisons";
+            }
+            if ($notificationsCreated > 0) {
+                $messages[] = "{$notificationsCreated} notifications";
+            }
+
+            if (! empty($messages)) {
                 return redirect()->route('admin.books.edit', $book)
-                    ->with('success', "Chapitre publié. " . implode(' + ', $messages) . " programmées.");
+                    ->with('success', 'Chapitre publié. '.implode(' + ', $messages).' programmées.');
             }
         }
 
@@ -108,6 +113,7 @@ class ChapterController extends Controller
     public function destroy(Book $book, Chapter $chapter): RedirectResponse
     {
         $chapter->delete();
+
         return redirect()->route('admin.books.edit', $book)->with('success', 'Chapitre supprimé');
     }
 }

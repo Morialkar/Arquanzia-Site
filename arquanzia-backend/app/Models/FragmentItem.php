@@ -11,7 +11,9 @@ class FragmentItem extends Model
     use HasUuids;
 
     protected $primaryKey = 'node_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -38,18 +40,18 @@ class FragmentItem extends Model
 
     public function getEmbedUrlAttribute(): ?string
     {
-        if (!$this->video_url) {
+        if (! $this->video_url) {
             return null;
         }
 
         // YouTube: watch?v= or youtu.be/
         if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/', $this->video_url, $m)) {
-            return 'https://www.youtube.com/embed/' . $m[1];
+            return 'https://www.youtube.com/embed/'.$m[1];
         }
 
         // Vimeo: vimeo.com/{id}
         if (preg_match('/vimeo\.com\/(\d+)/', $this->video_url, $m)) {
-            return 'https://player.vimeo.com/video/' . $m[1];
+            return 'https://player.vimeo.com/video/'.$m[1];
         }
 
         return $this->video_url;

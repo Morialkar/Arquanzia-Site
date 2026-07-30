@@ -45,6 +45,7 @@ class PageView extends Model
             ->get()
             ->map(function ($row) {
                 $book = Book::find($row->viewable_id);
+
                 return $book ? ['book' => $book, 'views' => $row->views] : null;
             })
             ->filter();
@@ -61,6 +62,7 @@ class PageView extends Model
             ->get()
             ->map(function ($row) {
                 $chapter = Chapter::with('book')->find($row->viewable_id);
+
                 return $chapter ? ['chapter' => $chapter, 'views' => $row->views] : null;
             })
             ->filter();
@@ -77,6 +79,7 @@ class PageView extends Model
             ->get()
             ->map(function ($row) {
                 $node = EncyclopediaNode::find($row->viewable_id);
+
                 return $node ? ['node' => $node, 'views' => $row->views] : null;
             })
             ->filter();

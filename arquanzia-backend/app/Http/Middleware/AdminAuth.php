@@ -22,6 +22,7 @@ class AdminAuth
             $user = User::find($request->session()->get('user_id'));
             if ($user && AdminAllowlist::isAllowed($user->email)) {
                 $request->session()->put('admin_email', $user->email);
+
                 return $next($request);
             }
         }

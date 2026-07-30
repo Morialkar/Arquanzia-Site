@@ -20,6 +20,7 @@ class AdminAllowlist extends Model
         if ($email === $rootAdmin) {
             return true;
         }
+
         return self::where('email', $email)->exists();
     }
 
@@ -29,6 +30,7 @@ class AdminAllowlist extends Model
         if ($email === $rootAdmin) {
             return 'admin';
         }
+
         return self::where('email', $email)->value('role');
     }
 }

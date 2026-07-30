@@ -9,7 +9,7 @@ class MarkdownHelper
         // Normalize line endings
         $markdown = str_replace("\r\n", "\n", $markdown);
         $markdown = str_replace("\r", "\n", $markdown);
-        
+
         $lines = explode("\n", $markdown);
         $result = [];
 
@@ -17,21 +17,23 @@ class MarkdownHelper
         for ($i = 0; $i < $count; $i++) {
             $line = $lines[$i];
             $trimmed = trim($line);
-            
+
             // Skip empty lines but keep them for spacing
             if ($trimmed === '') {
                 $result[] = '';
+
                 continue;
             }
-            
+
             // Remove lines that are ONLY * or ** (Obsidian closing artifacts)
             if ($trimmed === '*' || $trimmed === '**') {
                 continue;
             }
-            
+
             // Skip list items (start with * or - followed by space)
             if (preg_match('/^[\*\-]\s+/', $trimmed)) {
                 $result[] = $line;
+
                 continue;
             }
 
@@ -54,19 +56,20 @@ class MarkdownHelper
                     }
                     $j++;
                 }
-                
+
                 // Close * on the last line of the block
                 if ($j > $i + 1) {
                     // There are continuation lines - close on the last one
                     $result[] = $line;
                     for ($k = $i + 1; $k < $j; $k++) {
                         if ($k === $j - 1) {
-                            $result[] = $lines[$k] . '*';
+                            $result[] = $lines[$k].'*';
                         } else {
                             $result[] = $lines[$k];
                         }
                     }
                     $i = $j - 1; // Skip processed lines
+
                     continue;
                 } else {
                     $line .= '*';
@@ -77,15 +80,15 @@ class MarkdownHelper
         }
 
         $processed = implode("\n", $result);
-        
+
         // Process [[wikilinks]] before markdown rendering
         $processed = self::processWikilinks($processed);
-        
+
         \Log::debug('MarkdownHelper processed', ['has_wikilinks' => str_contains($processed, '[[')]);
-        
+
         // Render markdown
         $html = \Illuminate\Support\Str::markdown($processed);
-        
+
         // Preserve line breaks
         return nl2br($html);
     }
@@ -101,16 +104,16 @@ class MarkdownHelper
 
                 try {
                     $target = \App\Models\Wikilink::resolveTarget($term);
-                    
+
                     if ($target && isset($target['url'])) {
                         $url = $escape($target['url']);
                         $titleAttr = $escape($target['title'] ?? $displayText);
                         $teaserAttr = $target['teaser'] ? $escape(strip_tags($target['teaser'])) : null;
                         $displayEscaped = $escape($displayText);
 
-                        $dataAttrs = ' data-wikilink-term="' . ($titleAttr ?? '') . '"';
+                        $dataAttrs = ' data-wikilink-term="'.($titleAttr ?? '').'"';
                         if ($teaserAttr) {
-                            $dataAttrs .= ' data-wikilink-teaser="' . $teaserAttr . '"';
+                            $dataAttrs .= ' data-wikilink-teaser="'.$teaserAttr.'"';
                         }
 
                         return sprintf(
@@ -122,7 +125,7 @@ class MarkdownHelper
                     }
                 } catch (\Throwable $e) {
                 }
-                
+
                 return $escape($displayText);
             }, $text);
         } catch (\Exception $e) {

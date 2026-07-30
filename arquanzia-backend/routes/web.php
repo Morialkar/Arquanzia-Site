@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\HealthController;
-use App\Http\Controllers\HomepageController;
-use App\Http\Controllers\MediaController;
-use App\Http\Controllers\FeedPageController;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
-use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\FeedPageController;
+use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HomepageController;
+use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/healthz', HealthController::class);

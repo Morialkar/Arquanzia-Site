@@ -27,8 +27,8 @@ class Chapter extends Model
     ];
 
     protected $casts = [
-        'is_published'        => 'boolean',
-        'published_at'        => 'datetime',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
         'promo_banner_enabled' => 'boolean',
     ];
 
@@ -44,15 +44,16 @@ class Chapter extends Model
 
     public function getContentHtmlAttribute(): ?string
     {
-        if (!$this->content_md) {
+        if (! $this->content_md) {
             return null;
         }
+
         return \App\Helpers\MarkdownHelper::render($this->content_md);
     }
 
     public function isComingSoon(): bool
     {
-        return !$this->is_published || ($this->published_at && $this->published_at->isFuture());
+        return ! $this->is_published || ($this->published_at && $this->published_at->isFuture());
     }
 
     public function scopeVisible($query)

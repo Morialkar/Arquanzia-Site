@@ -17,7 +17,7 @@ class WikilinkFactory extends Factory
         return [
             'term' => $this->faker->unique()->word(),
             'encyclopedia_node_id' => null,
-            'custom_url' => 'https://example.test/' . $this->faker->unique()->slug(),
+            'custom_url' => 'https://example.test/'.$this->faker->unique()->slug(),
         ];
     }
 }

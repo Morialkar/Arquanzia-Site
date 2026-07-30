@@ -59,6 +59,7 @@ class BookController extends Controller
     public function edit(Book $book): View
     {
         $book->load(['cover', 'chapters', 'files']);
+
         return view('admin.books.edit', ['book' => $book]);
     }
 
@@ -67,7 +68,7 @@ class BookController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'nullable|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:books,slug,' . $book->id,
+            'slug' => 'nullable|string|max:255|unique:books,slug,'.$book->id,
             'description_md' => 'nullable|string',
             'cover' => 'nullable|image|max:5120',
             'is_published' => 'boolean',
@@ -93,12 +94,13 @@ class BookController extends Controller
     public function destroy(Book $book): RedirectResponse
     {
         $book->delete();
+
         return redirect()->route('admin.books.index')->with('success', 'Livre supprimé');
     }
 
     protected function uploadMedia($file): string
     {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
         $file->storeAs('media/original', $filename);
 
         $media = PostMedia::create([
@@ -112,21 +114,21 @@ class BookController extends Controller
     public function generateExport(Request $request, Book $book): RedirectResponse
     {
         $format = $request->input('format', 'epub');
-        
-        if (!in_array($format, ['epub', 'pdf'])) {
+
+        if (! in_array($format, ['epub', 'pdf'])) {
             return back()->withErrors(['format' => 'Format invalide.']);
         }
 
         try {
-            $exportService = new BookExportService();
-            
+            $exportService = new BookExportService;
+
             if ($format === 'epub') {
                 $exportService->generateEpub($book);
             } else {
                 $exportService->generatePdf($book);
             }
 
-            return back()->with('success', strtoupper($format) . ' généré avec succès!');
+            return back()->with('success', strtoupper($format).' généré avec succès!');
         } catch (\Exception $e) {
             return back()->withErrors(['export' => $e->getMessage()]);
         }

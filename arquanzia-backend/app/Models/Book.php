@@ -47,9 +47,10 @@ class Book extends Model
 
     public function getDescriptionHtmlAttribute(): ?string
     {
-        if (!$this->description_md) {
+        if (! $this->description_md) {
             return null;
         }
+
         return \App\Helpers\MarkdownHelper::render($this->description_md);
     }
 

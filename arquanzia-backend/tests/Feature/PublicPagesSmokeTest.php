@@ -47,13 +47,13 @@ class PublicPagesSmokeTest extends TestCase
             '/encyclopedie',
             '/fragments',
             '/recherche',
-            '/recherche?q=' . urlencode($c['book']->title),
-            '/api/recherche?q=' . urlencode($c['book']->title),
+            '/recherche?q='.urlencode($c['book']->title),
+            '/api/recherche?q='.urlencode($c['book']->title),
             '/sitemap.xml',
             '/healthz',
             route('library.chapter', [$c['book']->slug, $c['chapter']->slug], false),
             route('encyclopedia.show', $c['category']->slug, false),
-            route('encyclopedia.show', $c['category']->slug . '/' . $c['article']->slug, false),
+            route('encyclopedia.show', $c['category']->slug.'/'.$c['article']->slug, false),
             route('fragments.show', $c['fragmentCategory']->slug, false),
         ];
 

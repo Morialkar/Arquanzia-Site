@@ -32,7 +32,7 @@ class DownloadController extends Controller
 
             return response($result['content'], 200, [
                 'Content-Type' => $result['mime'],
-                'Content-Disposition' => 'attachment; filename="' . $result['filename'] . '"',
+                'Content-Disposition' => 'attachment; filename="'.$result['filename'].'"',
             ]);
         } catch (\Throwable $e) {
             return $this->exportFailed($e, ['book' => $book->slug, 'format' => $format]);
@@ -57,7 +57,7 @@ class DownloadController extends Controller
 
             return response($result['content'], 200, [
                 'Content-Type' => $result['mime'],
-                'Content-Disposition' => 'attachment; filename="' . $result['filename'] . '"',
+                'Content-Disposition' => 'attachment; filename="'.$result['filename'].'"',
             ]);
         } catch (\Throwable $e) {
             return $this->exportFailed($e, [
@@ -83,27 +83,27 @@ class DownloadController extends Controller
     {
         $image = EncyclopediaGalleryImage::find($imageId);
 
-        if (!$image) {
+        if (! $image) {
             abort(404);
         }
 
-        if (!$image->downloadable) {
+        if (! $image->downloadable) {
             abort(403);
         }
 
         $media = $image->media;
-        if (!$media) {
+        if (! $media) {
             abort(404);
         }
 
         $filename = $image->caption
-            ? \Illuminate\Support\Str::slug($image->caption) . '.jpg'
-            : 'encyclopedia-image-' . $image->id . '.jpg';
+            ? \Illuminate\Support\Str::slug($image->caption).'.jpg'
+            : 'encyclopedia-image-'.$image->id.'.jpg';
 
         $possiblePaths = [];
         if ($media->filename) {
-            $possiblePaths[] = 'media/' . $media->filename;
-            $possiblePaths[] = 'media/original/' . $media->filename;
+            $possiblePaths[] = 'media/'.$media->filename;
+            $possiblePaths[] = 'media/original/'.$media->filename;
         }
         if ($media->original_path) {
             $possiblePaths[] = $media->original_path;
@@ -117,7 +117,7 @@ class DownloadController extends Controller
             }
         }
 
-        if (!$foundPath) {
+        if (! $foundPath) {
             abort(404);
         }
 

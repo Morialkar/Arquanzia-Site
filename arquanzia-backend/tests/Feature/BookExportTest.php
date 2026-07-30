@@ -53,7 +53,7 @@ class BookExportTest extends TestCase
 
         $this->assertSame($mime, $result['mime']);
         $this->assertNotEmpty($result['content']);
-        $this->assertStringEndsWith('.' . $format, $result['filename']);
+        $this->assertStringEndsWith('.'.$format, $result['filename']);
     }
 
     #[DataProvider('formats')]

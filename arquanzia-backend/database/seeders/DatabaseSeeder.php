@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $rootEmail = config('app.root_admin_email');
-        
+
         $team = User::firstOrCreate(
             ['email' => $rootEmail],
             ['handle' => 'team', 'email' => $rootEmail]

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('encyclopedia_nodes', 'thumbnail_media_id')) {
+        if (! Schema::hasColumn('encyclopedia_nodes', 'thumbnail_media_id')) {
             Schema::table('encyclopedia_nodes', function (Blueprint $table) {
                 $table->uuid('thumbnail_media_id')->nullable()->after('teaser_md');
                 $table->foreign('thumbnail_media_id')->references('id')->on('post_media')->nullOnDelete();

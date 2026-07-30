@@ -13,6 +13,7 @@ class SiteSetting extends Model
     {
         return Cache::remember("site_setting_{$key}", 3600, function () use ($key, $default) {
             $setting = static::where('key', $key)->first();
+
             return $setting ? $setting->value : $default;
         });
     }
@@ -34,6 +35,7 @@ class SiteSetting extends Model
     public static function getLogoVersion(): int
     {
         $setting = static::where('key', 'site_logo')->first();
+
         return $setting ? $setting->updated_at->timestamp : 0;
     }
 

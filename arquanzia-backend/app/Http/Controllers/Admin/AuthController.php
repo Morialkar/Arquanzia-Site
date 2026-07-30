@@ -29,14 +29,15 @@ class AuthController extends Controller
         $email = strtolower($request->input('email'));
         $ip = $request->ip();
 
-        $rateLimitKey = 'admin-login:' . $ip . ':' . $email;
+        $rateLimitKey = 'admin-login:'.$ip.':'.$email;
         if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
             return back()->withErrors(['email' => 'Trop de tentatives. Réessayez plus tard.']);
         }
         RateLimiter::hit($rateLimitKey, 300);
 
-        if (!AdminAllowlist::isAllowed($email)) {
+        if (! AdminAllowlist::isAllowed($email)) {
             AuditLog::log('admin.login.denied', $email, ['reason' => 'not_in_allowlist'], $ip);
+
             return back()->with('status', 'Si cette adresse est autorisée, un lien vous a été envoyé.');
         }
 
@@ -57,14 +58,16 @@ class AuthController extends Controller
     {
         $link = MagicLink::findValidByToken($token);
 
-        if (!$link) {
+        if (! $link) {
             AuditLog::log('admin.magic_link.invalid', null, ['token_prefix' => substr($token, 0, 8)], $request->ip());
+
             return redirect()->route('admin.login')->withErrors(['token' => 'Lien invalide ou expiré.']);
         }
 
-        if (!AdminAllowlist::isAllowed($link->email)) {
+        if (! AdminAllowlist::isAllowed($link->email)) {
             $link->markAsUsed();
             AuditLog::log('admin.magic_link.denied', $link->email, ['reason' => 'not_in_allowlist'], $request->ip());
+
             return redirect()->route('admin.login')->withErrors(['token' => 'Accès refusé.']);
         }
 
@@ -92,12 +95,12 @@ class AuthController extends Controller
             return $user;
         }
 
-        $baseHandle = 'user_' . substr(md5($email), 0, 8);
+        $baseHandle = 'user_'.substr(md5($email), 0, 8);
         $handle = $baseHandle;
         $suffix = 1;
 
         while (User::where('handle', $handle)->exists()) {
-            $handle = $baseHandle . '_' . $suffix;
+            $handle = $baseHandle.'_'.$suffix;
             $suffix++;
         }
 
@@ -106,8 +109,6 @@ class AuthController extends Controller
             'handle' => $handle,
         ]);
     }
-
-
 
     public function logout(Request $request): RedirectResponse
     {

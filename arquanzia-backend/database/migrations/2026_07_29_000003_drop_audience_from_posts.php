@@ -16,7 +16,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('posts', 'audience')) {
+        if (! Schema::hasColumn('posts', 'audience')) {
             return;
         }
 

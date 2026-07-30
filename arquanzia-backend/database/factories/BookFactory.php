@@ -18,7 +18,7 @@ class BookFactory extends Factory
         $title = $this->faker->unique()->sentence(3);
 
         return [
-            'slug' => Str::slug($title) . '-' . $this->faker->unique()->numberBetween(1, 99999),
+            'slug' => Str::slug($title).'-'.$this->faker->unique()->numberBetween(1, 99999),
             'title' => $title,
             'author' => $this->faker->name(),
             'description_md' => $this->faker->paragraph(),

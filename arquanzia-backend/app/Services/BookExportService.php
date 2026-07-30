@@ -16,16 +16,16 @@ class BookExportService
     /**
      * Export a book or chapter to PDF/EPUB.
      *
-     * @param Book|Chapter $target Book or Chapter to export
-     * @param string $format 'pdf' or 'epub'
-     * @param array $options Font/size options: ['font' => 'standard'|'dyslexic', 'size' => 14-26]
+     * @param  Book|Chapter  $target  Book or Chapter to export
+     * @param  string  $format  'pdf' or 'epub'
+     * @param  array  $options  Font/size options: ['font' => 'standard'|'dyslexic', 'size' => 14-26]
      * @return array{filename: string, mime: string, content: string}
      */
     public function export(Book|Chapter $target, string $format, array $options = []): array
     {
         $format = strtolower($format);
-        if (!in_array($format, ['pdf', 'epub', 'edition'], true)) {
-            throw new \InvalidArgumentException('Format invalide: ' . $format);
+        if (! in_array($format, ['pdf', 'epub', 'edition'], true)) {
+            throw new \InvalidArgumentException('Format invalide: '.$format);
         }
 
         $options = $this->normalizeOptions($options);
@@ -74,8 +74,9 @@ class BookExportService
     public function generateEpub(Book $book): string
     {
         $result = $this->export($book, 'epub');
-        $filepath = $this->exportPath . '/' . $book->id . '/' . $result['filename'];
+        $filepath = $this->exportPath.'/'.$book->id.'/'.$result['filename'];
         Storage::disk('local')->put($filepath, $result['content']);
+
         return $filepath;
     }
 
@@ -85,15 +86,16 @@ class BookExportService
     public function generatePdf(Book $book): string
     {
         $result = $this->export($book, 'pdf');
-        $filepath = $this->exportPath . '/' . $book->id . '/' . $result['filename'];
+        $filepath = $this->exportPath.'/'.$book->id.'/'.$result['filename'];
         Storage::disk('local')->put($filepath, $result['content']);
+
         return $filepath;
     }
 
     public function getExportPath(Book $book, string $format): ?string
     {
-        $filename = Str::slug($book->title) . '.' . $format;
-        $filepath = $this->exportPath . '/' . $book->id . '/' . $filename;
+        $filename = Str::slug($book->title).'.'.$format;
+        $filepath = $this->exportPath.'/'.$book->id.'/'.$filename;
 
         if (Storage::disk('local')->exists($filepath)) {
             return $filepath;
@@ -125,9 +127,10 @@ class BookExportService
     protected function buildFilename(Book $book, ?Chapter $chapter, string $format, string $suffix = ''): string
     {
         if ($chapter) {
-            return Str::slug($book->title) . '-' . Str::slug($chapter->title) . '.' . $format;
+            return Str::slug($book->title).'-'.Str::slug($chapter->title).'.'.$format;
         }
         $base = Str::slug($book->title);
+
         return $suffix ? "{$base}-{$suffix}.{$format}" : "{$base}.{$format}";
     }
 
@@ -137,7 +140,7 @@ class BookExportService
 
     protected function buildPdf(Book $book, Collection $chapters, array $options, bool $isSingleChapter): string
     {
-        if (!class_exists(\Dompdf\Dompdf::class)) {
+        if (! class_exists(\Dompdf\Dompdf::class)) {
             throw new \RuntimeException('DomPDF non installé. Exécutez composer require dompdf/dompdf');
         }
 
@@ -229,7 +232,7 @@ HTML;
 
         $coverHtml = $this->buildCoverImageHtml($book);
 
-        $tocItems = $chapters->map(fn($c) => '<li>' . e($c->title) . '</li>')->implode("\n            ");
+        $tocItems = $chapters->map(fn ($c) => '<li>'.e($c->title).'</li>')->implode("\n            ");
 
         $chaptersHtml = '';
         foreach ($chapters as $chapter) {
@@ -312,10 +315,10 @@ HTML;
 
     protected function buildEditionPdf(Book $book, Collection $chapters, array $options): string
     {
-        if (!class_exists(\Dompdf\Dompdf::class)) {
+        if (! class_exists(\Dompdf\Dompdf::class)) {
             throw new \RuntimeException('DomPDF non installé.');
         }
-        if (!class_exists(\setasign\Fpdi\Fpdi::class)) {
+        if (! class_exists(\setasign\Fpdi\Fpdi::class)) {
             throw new \RuntimeException('FPDI non installé. Exécutez composer require setasign/fpdi setasign/fpdf');
         }
 
@@ -333,7 +336,7 @@ HTML;
         $year = now()->year;
         $coverHtml = $this->buildCoverImageHtml($book);
 
-        $tocItems = $chapters->map(fn($c) => '<li>' . e($c->title) . '</li>')->implode("\n");
+        $tocItems = $chapters->map(fn ($c) => '<li>'.e($c->title).'</li>')->implode("\n");
 
         $chaptersHtml = '';
         foreach ($chapters as $chapter) {
@@ -438,7 +441,7 @@ HTML;
 
         try {
             // Count pages in the source PDF
-            $counter = new \setasign\Fpdi\Fpdi();
+            $counter = new \setasign\Fpdi\Fpdi;
             $totalPages = $counter->setSourceFile($srcFile);
 
             // Pad to multiple of 4
@@ -458,7 +461,7 @@ HTML;
                 $sheets[] = [2 + (2 * $i), $padded - 1 - (2 * $i)];       // back
             }
 
-            $booklet = new \setasign\Fpdi\Fpdi();
+            $booklet = new \setasign\Fpdi\Fpdi;
             $booklet->setSourceFile($srcFile);
 
             foreach ($sheets as [$leftPage, $rightPage]) {
@@ -491,7 +494,7 @@ HTML;
     protected function buildEpub(Book $book, Collection $chapters, array $options, bool $isSingleChapter): string
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'epub');
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
 
         if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             throw new \RuntimeException('Impossible de créer le fichier EPUB.');
@@ -503,7 +506,7 @@ HTML;
         // Add fonts if dyslexic
         $fontFiles = $options['font'] === 'dyslexic' ? $this->getDyslexicFontFiles() : [];
         foreach ($fontFiles as $filename => $path) {
-            $zip->addFile($path, 'OEBPS/fonts/' . $filename);
+            $zip->addFile($path, 'OEBPS/fonts/'.$filename);
         }
 
         // Add styles
@@ -526,16 +529,16 @@ HTML;
 
         // Add chapters
         foreach ($chapters as $index => $chapter) {
-            $chapterId = 'chapter' . ($index + 1);
+            $chapterId = 'chapter'.($index + 1);
             $chapterXhtml = $this->buildEpubChapterXhtml($book->title, $chapter->title, $chapter->content_md ?? '');
-            $zip->addFromString('OEBPS/' . $chapterId . '.xhtml', $chapterXhtml);
+            $zip->addFromString('OEBPS/'.$chapterId.'.xhtml', $chapterXhtml);
 
-            $manifestItems[] = '<item id="' . $chapterId . '" href="' . $chapterId . '.xhtml" media-type="application/xhtml+xml"/>';
-            $spineItems[] = '<itemref idref="' . $chapterId . '"/>';
+            $manifestItems[] = '<item id="'.$chapterId.'" href="'.$chapterId.'.xhtml" media-type="application/xhtml+xml"/>';
+            $spineItems[] = '<itemref idref="'.$chapterId.'"/>';
         }
 
         // Add TOC for multi-chapter books
-        if (!$isSingleChapter) {
+        if (! $isSingleChapter) {
             $navXhtml = $this->buildEpubNav($chapters);
             $zip->addFromString('OEBPS/nav.xhtml', $navXhtml);
             $manifestItems[] = '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>';
@@ -545,7 +548,7 @@ HTML;
         // Build content.opf
         $uuid = $isSingleChapter ? $chapters->first()->id : $book->id;
         $title = $isSingleChapter
-            ? e($book->title) . ' - ' . e($chapters->first()->title)
+            ? e($book->title).' - '.e($chapters->first()->title)
             : e($book->title);
         $contentOpf = $this->buildEpubContentOpf($uuid, $title, $book->author, $manifestItems, $spineItems);
         $zip->addFromString('OEBPS/content.opf', $contentOpf);
@@ -560,7 +563,7 @@ HTML;
 
     protected function buildEpubContainer(): string
     {
-        return <<<XML
+        return <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
     <rootfiles>
@@ -602,7 +605,7 @@ XML;
     {
         $tocItems = '';
         foreach ($chapters as $index => $chapter) {
-            $chapterId = 'chapter' . ($index + 1);
+            $chapterId = 'chapter'.($index + 1);
             $title = htmlspecialchars($chapter->title, ENT_XML1 | ENT_COMPAT, 'UTF-8');
             $tocItems .= "<li><a href=\"{$chapterId}.xhtml\">{$title}</a></li>\n";
         }
@@ -701,7 +704,7 @@ XML;
 
     protected function cleanContentForExport(string $html): string
     {
-        if (!$html) {
+        if (! $html) {
             return '';
         }
 
@@ -720,8 +723,8 @@ XML;
         $html = preg_replace('/<p>\s*<\/p>/', '', $html);
 
         // Wrap loose text in paragraphs if not already
-        if (!str_contains($html, '<p>') && !str_contains($html, '<h')) {
-            $html = '<p>' . $html . '</p>';
+        if (! str_contains($html, '<p>') && ! str_contains($html, '<h')) {
+            $html = '<p>'.$html.'</p>';
         }
 
         return trim($html);
@@ -732,23 +735,25 @@ XML;
         $html = str_replace('<br>', '<br/>', $html);
         $html = str_replace('<hr>', '<hr/>', $html);
         $html = preg_replace('/<img([^>]*)(?<!\/)>(?!\s*<\/img>)/i', '<img$1/>', $html);
+
         return $html;
     }
 
     protected function buildCoverImageHtml(Book $book): string
     {
-        if (!$book->cover) {
+        if (! $book->cover) {
             return '';
         }
 
-        $coverPath = storage_path('app/media/original/' . $book->cover->filename);
-        if (!file_exists($coverPath)) {
+        $coverPath = storage_path('app/media/original/'.$book->cover->filename);
+        if (! file_exists($coverPath)) {
             return '';
         }
 
         $coverData = base64_encode(file_get_contents($coverPath));
         $coverMime = $book->cover->mime_type ?? 'image/jpeg';
-        return '<img src="data:' . $coverMime . ';base64,' . $coverData . '" style="max-width: 100%; max-height: 70%; object-fit: contain; margin-bottom: 2em;">';
+
+        return '<img src="data:'.$coverMime.';base64,'.$coverData.'" style="max-width: 100%; max-height: 70%; object-fit: contain; margin-bottom: 2em;">';
     }
 
     protected function calcFontSize(int $base, int $delta): int
@@ -771,7 +776,7 @@ XML;
         $css = '';
 
         foreach ($faces as $face) {
-            if (!is_file($face['path'])) {
+            if (! is_file($face['path'])) {
                 continue;
             }
 
@@ -796,28 +801,28 @@ XML;
 
         return array_filter([
             [
-                'path' => $basePath . '/OpenDyslexic-Regular.otf',
+                'path' => $basePath.'/OpenDyslexic-Regular.otf',
                 'style' => 'normal',
                 'weight' => 400,
                 'format' => 'opentype',
                 'extension' => 'otf',
             ],
             [
-                'path' => $basePath . '/OpenDyslexic-Bold.otf',
+                'path' => $basePath.'/OpenDyslexic-Bold.otf',
                 'style' => 'normal',
                 'weight' => 700,
                 'format' => 'opentype',
                 'extension' => 'otf',
             ],
             [
-                'path' => $basePath . '/OpenDyslexic-Italic.otf',
+                'path' => $basePath.'/OpenDyslexic-Italic.otf',
                 'style' => 'italic',
                 'weight' => 400,
                 'format' => 'opentype',
                 'extension' => 'otf',
             ],
             [
-                'path' => $basePath . '/OpenDyslexic-BoldItalic.otf',
+                'path' => $basePath.'/OpenDyslexic-BoldItalic.otf',
                 'style' => 'italic',
                 'weight' => 700,
                 'format' => 'opentype',
@@ -831,10 +836,10 @@ XML;
         $basePath = public_path('fonts/opendyslexic');
 
         return array_filter([
-            'OpenDyslexic-Regular.ttf' => $basePath . '/OpenDyslexic-Regular.ttf',
-            'OpenDyslexic-Bold.ttf' => $basePath . '/OpenDyslexic-Bold.ttf',
-            'OpenDyslexic-Italic.ttf' => $basePath . '/OpenDyslexic-Italic.ttf',
-            'OpenDyslexic-BoldItalic.ttf' => $basePath . '/OpenDyslexic-BoldItalic.ttf',
+            'OpenDyslexic-Regular.ttf' => $basePath.'/OpenDyslexic-Regular.ttf',
+            'OpenDyslexic-Bold.ttf' => $basePath.'/OpenDyslexic-Bold.ttf',
+            'OpenDyslexic-Italic.ttf' => $basePath.'/OpenDyslexic-Italic.ttf',
+            'OpenDyslexic-BoldItalic.ttf' => $basePath.'/OpenDyslexic-BoldItalic.ttf',
         ], fn ($path) => is_file($path));
     }
 
@@ -844,21 +849,21 @@ XML;
 
         return array_filter([
             [
-                'path' => $basePath . '/Inter-Regular.ttf',
+                'path' => $basePath.'/Inter-Regular.ttf',
                 'style' => 'normal',
                 'weight' => 400,
                 'format' => 'truetype',
                 'extension' => 'ttf',
             ],
             [
-                'path' => $basePath . '/Inter-Bold.ttf',
+                'path' => $basePath.'/Inter-Bold.ttf',
                 'style' => 'normal',
                 'weight' => 700,
                 'format' => 'truetype',
                 'extension' => 'ttf',
             ],
             [
-                'path' => $basePath . '/Inter-Italic.ttf',
+                'path' => $basePath.'/Inter-Italic.ttf',
                 'style' => 'italic',
                 'weight' => 400,
                 'format' => 'truetype',
