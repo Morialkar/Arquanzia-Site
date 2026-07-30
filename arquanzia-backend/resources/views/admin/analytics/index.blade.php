@@ -10,10 +10,10 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         @php
             $summaryCards = [
-                ['label' => 'Utilisateurs', 'value' => $stats['total_users'], 'color' => 'text-arq-forest dark:text-arq-mint'],
-                ['label' => 'Lecteurs actifs', 'value' => $stats['active_readers'], 'color' => 'text-amber-600 dark:text-amber-300'],
-                ['label' => 'VIPs actifs', 'value' => $stats['active_vips'], 'color' => 'text-purple-600 dark:text-purple-300'],
-                ['label' => 'Taux reprise lecture', 'value' => "{$stats['resume_rate']}%", 'color' => 'text-green-600 dark:text-green-300'],
+                ['label' => 'Livres publiés', 'value' => $stats['published_books'], 'color' => 'text-arq-forest dark:text-arq-mint'],
+                ['label' => 'Chapitres publiés', 'value' => $stats['published_chapters'], 'color' => 'text-arq-copper dark:text-arq-copper'],
+                ['label' => 'Entrées d’encyclopédie', 'value' => $stats['published_encyclopedia'], 'color' => 'text-amber-600 dark:text-amber-300'],
+                ['label' => 'Pages vues (30 j)', 'value' => $stats['views_last_30_days'], 'color' => 'text-purple-600 dark:text-purple-300'],
             ];
         @endphp
         @foreach($summaryCards as $card)

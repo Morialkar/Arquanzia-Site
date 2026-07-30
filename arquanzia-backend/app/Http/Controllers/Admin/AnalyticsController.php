@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Book;
+use App\Models\Chapter;
+use App\Models\EncyclopediaNode;
 use App\Models\PageView;
-use App\Models\User;
 use Illuminate\View\View;
 
 class AnalyticsController extends Controller
@@ -12,8 +14,10 @@ class AnalyticsController extends Controller
     public function index(): View
     {
         $stats = [
-            'total_users' => User::count(),
-            'resume_rate' => PageView::getReadingResumeRate(30),
+            'published_books' => Book::where('is_published', true)->count(),
+            'published_chapters' => Chapter::where('is_published', true)->count(),
+            'published_encyclopedia' => EncyclopediaNode::published()->articles()->count(),
+            'views_last_30_days' => PageView::where('viewed_date', '>=', now()->subDays(30))->count(),
         ];
 
         $topBooks = PageView::getTopBooks(30, 10);

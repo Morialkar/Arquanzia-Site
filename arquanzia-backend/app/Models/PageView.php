@@ -81,21 +81,4 @@ class PageView extends Model
             })
             ->filter();
     }
-
-    public static function getReadingResumeRate(int $days = 30): float
-    {
-        $usersWithProgress = ReadingProgress::where('updated_at', '>=', now()->subDays($days))
-            ->where('progress', '>', 0)
-            ->where('progress', '<', 100)
-            ->distinct('user_id')
-            ->count('user_id');
-
-        $usersWhoResumed = ReadingProgress::where('updated_at', '>=', now()->subDays($days))
-            ->where('progress', '>', 0)
-            ->whereRaw('updated_at > created_at')
-            ->distinct('user_id')
-            ->count('user_id');
-
-        return $usersWithProgress > 0 ? round(($usersWhoResumed / $usersWithProgress) * 100, 1) : 0;
-    }
 }

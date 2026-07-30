@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\FragmentNode;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class FragmentController extends Controller
