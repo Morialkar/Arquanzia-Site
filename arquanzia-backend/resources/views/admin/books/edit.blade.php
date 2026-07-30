@@ -32,7 +32,16 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-1">Slug</label>
-                    <input type="text" name="slug" value="{{ old('slug', $book->slug) }}" class="w-full px-3 py-2 border border-arq-amber/40 dark:border-white/20 rounded-lg font-mono bg-white dark:bg-black/20 text-arq-ink dark:text-white">
+                    <input type="text" name="slug" value="{{ old('slug', $book->slug) }}"
+                        @readonly($book->isSlugLocked())
+                        class="w-full px-3 py-2 border border-arq-amber/40 dark:border-white/20 rounded-lg font-mono bg-white dark:bg-black/20 text-arq-ink dark:text-white @if($book->isSlugLocked()) opacity-60 cursor-not-allowed @endif">
+                    @if($book->isSlugLocked())
+                        <p class="mt-1 text-xs text-arq-bark/60 dark:text-arq-mint/60">
+                            🔒 Figé depuis la première publication. L’adresse du livre et de ses chapitres en dépend,
+                            ainsi que les flux RSS auxquels des gens sont abonnés : les modifier les casserait sans
+                            que personne ne le signale. Le titre, lui, reste modifiable.
+                        </p>
+                    @endif
                 </div>
 
                 <div>

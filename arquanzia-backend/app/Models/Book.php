@@ -18,12 +18,25 @@ class Book extends Model
         'author',
         'description_md',
         'cover_media_id',
+        'slug_locked_at',
         'is_published',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
+        'slug_locked_at' => 'datetime',
     ];
+
+    /**
+     * Le slug est gelé dès la première mise en publication : il compose l'URL du livre et de
+     * ses chapitres, donc les entrées des flux RSS. Le verrou ne se rouvre jamais, même si le
+     * livre est dépublié — sinon dépublier, renommer et republier casserait les abonnés
+     * acquis pendant la première publication.
+     */
+    public function isSlugLocked(): bool
+    {
+        return $this->slug_locked_at !== null;
+    }
 
     public function cover(): BelongsTo
     {

@@ -8,6 +8,7 @@ use App\Models\PostMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BookController extends Controller
@@ -51,6 +52,7 @@ class BookController extends Controller
             'description_md' => $request->input('description_md'),
             'cover_media_id' => $coverMediaId,
             'is_published' => $request->boolean('is_published'),
+            'slug_locked_at' => $request->boolean('is_published') ? now() : null,
         ]);
 
         return redirect()->route('admin.books.index')->with('success', 'Livre créé');
@@ -74,18 +76,36 @@ class BookController extends Controller
             'is_published' => 'boolean',
         ]);
 
-        $slug = $request->input('slug') ?: Str::slug($request->input('title'));
+        // Le gel vit ici et non dans le formulaire : le champ étant en lecture seule, une
+        // simple modification du titre régénérerait sinon le slug en silence, via le repli
+        // Str::slug($title) — exactement ce que le verrou doit empêcher.
+        if ($book->isSlugLocked()) {
+            $requestedSlug = $request->input('slug');
+
+            if ($requestedSlug && $requestedSlug !== $book->slug) {
+                throw ValidationException::withMessages([
+                    'slug' => 'Le slug d’un livre déjà publié ne peut plus changer : des flux RSS et des liens externes en dépendent, et ils casseraient sans que personne ne le signale.',
+                ]);
+            }
+
+            $slug = $book->slug;
+        } else {
+            $slug = $request->input('slug') ?: Str::slug($request->input('title'));
+        }
 
         if ($request->hasFile('cover')) {
             $book->cover_media_id = $this->uploadMedia($request->file('cover'));
         }
+
+        $nowPublished = $request->boolean('is_published');
 
         $book->update([
             'title' => $request->input('title'),
             'author' => $request->input('author') ?: 'Créations Sortilege',
             'slug' => $slug,
             'description_md' => $request->input('description_md'),
-            'is_published' => $request->boolean('is_published'),
+            'is_published' => $nowPublished,
+            'slug_locked_at' => $book->slug_locked_at ?? ($nowPublished ? now() : null),
         ]);
 
         return redirect()->route('admin.books.edit', $book)->with('success', 'Livre mis à jour');

@@ -222,6 +222,10 @@ Priorités, du plus au moins rentable :
 1. **Le chemin heureux de chaque ressource** — créer puis modifier, et vérifier que les champs
    arrivent réellement en base. C'est ce qui attraperait un champ retiré du `$fillable` ou une
    validation devenue incohérente avec le formulaire.
+1bis. **Le gel du slug d'un livre après publication**, avancé du lot 3.5 : une fois le livre
+   publié une première fois, son slug ne peut plus changer, afin qu'un flux RSS ne meure
+   jamais en silence. Le gel est définitif — dépublier puis renommer ne doit pas le
+   contourner.
 2. **Le contrôle d'accès** — chaque écriture sans session admin doit être refusée, et ne rien
    modifier. Vingt-neuf points d'entrée, aucun test : c'est le trou le plus large.
 3. **La protection CSRF** — vérifier qu'une écriture sans jeton est rejetée. Attention, les
@@ -349,15 +353,15 @@ simple mise en avant ; la page de composition s'adresse à qui veut affiner.
     republier contournerait la règle et casserait quand même les abonnés acquis pendant la
     première publication. Il faut donc mémoriser qu'un livre *a été* publié — un
     `slug_locked_at`, ou simplement verrouiller dès la première mise en publication.
-  - **Les chapitres aussi.** Leur slug compose l'URL d'une entrée de flux, qui sert d'`<id>`
-    Atom : le renommer fait réapparaître l'entrée comme neuve chez tous les abonnés. Même
-    règle qu'un livre.
+  - **Les chapitres en sont exemptés** — décision de Naomi. Renommer un chapitre suppose d'en
+    changer le titre, donc le texte : la sortie est réellement nouvelle, et sa réapparition
+    dans les flux est un comportement voulu, pas un faux positif. Conséquence assumée : les
+    anciennes URL du chapitre cassent, signets et liens externes compris.
   - **Validation côté serveur**, pas seulement un champ désactivé dans le formulaire. Le
     champ passe en lecture seule avec une explication, mais la règle vit dans le contrôleur.
-  - Le titre, lui, reste librement modifiable : seul le slug est gelé.
+  - Le titre d'un livre, lui, reste librement modifiable : seul son slug est gelé.
 
-  Ce point peut être avancé au lot 2.5, qui écrit précisément les tests d'écriture des livres
-  et des chapitres — la validation et son test s'y logent naturellement.
+  **Avancé au lot 2.5**, qui écrit précisément les tests d'écriture des livres.
 - **Espace d'URL infini.** Chaque combinaison de paramètres est une URL distincte, interrogée
   toutes les 15 à 60 minutes par chaque lecteur abonné, indéfiniment. Il faut normaliser les
   paramètres (tri, dédoublonnage, minuscules) et **rediriger en 301 vers la forme canonique**

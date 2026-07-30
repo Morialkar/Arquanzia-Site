@@ -23,11 +23,12 @@ class BookFactory extends Factory
             'author' => $this->faker->name(),
             'description_md' => $this->faker->paragraph(),
             'is_published' => true,
+            'slug_locked_at' => now(),
         ];
     }
 
     public function draft(): static
     {
-        return $this->state(['is_published' => false]);
+        return $this->state(['is_published' => false, 'slug_locked_at' => null]);
     }
 }
