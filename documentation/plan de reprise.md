@@ -308,23 +308,61 @@ gabarit à la manière de `sitemap.blade.php`, le scope `published()` déjà tes
 
 ### Contenu
 
-- `/flux/chapitres.xml` (Atom) : les derniers chapitres publiés, du livre publié uniquement.
-- Éventuellement `/flux/fil.xml` pour les billets, si le premier flux fait ses preuves.
 - **Texte complet dans le flux** — décision prise : le contenu est déjà public, un agrégateur
   n'est qu'un navigateur de plus, et la licence s'applique pareil. Le bandeau promotionnel du
   chapitre est rendu en fin d'entrée, pour que la promo voyage avec le texte.
 - Balise `<link rel="alternate" type="application/atom+xml">` dans le gabarit public pour la
-  découverte automatique.
+  découverte automatique du flux par défaut.
+
+### Flux granulaires
+
+Un point d'entrée paramétré, plus des raccourcis lisibles :
+
+```
+/flux.xml                                  tout
+/flux.xml?livres=cendres,le-pacte          deux livres
+/flux.xml?livres=cendres&sections=fil      un livre et le fil
+/flux/chapitres.xml                        raccourci, tous les chapitres
+```
+
+`sections` accepte `fil`, `encyclopedie`, `fragments`. Chaque sélecteur reste soumis au
+filtre de publication : un flux ne peut jamais exposer un brouillon.
+
+### Page de composition
+
+`/flux` : cases à cocher pour les livres et les sections, URL construite en direct, bouton
+« copier ». Aucun état serveur, aucun compte — du JavaScript classique en ligne, comme le
+sélecteur de thème et les réglages de lecture existants. Le flux par défaut reste l'option
+simple mise en avant ; la page de composition s'adresse à qui veut affiner.
 
 ### Points techniques
 
-- Tout en URL absolues dans le HTML du flux : images, wikilinks, liens internes. C'est le
-  vrai travail du lot — le rendu actuel produit des chemins relatifs.
+- **Le renommage de slug casse les abonnements en silence.** `BookController::update()`
+  accepte un nouveau slug après publication. Contrairement à un lien mort, personne ne
+  signalera un flux mort — le lecteur affichera simplement « rien de neuf ». Trois sorties :
+  interdire le changement de slug une fois le livre publié, tenir un historique des slugs
+  avec redirection, ou avertir dans le formulaire admin. **À trancher avant de livrer le
+  lot** — recommandation : avertissement maintenant, historique plus tard si les renommages
+  s'avèrent fréquents.
+- **Espace d'URL infini.** Chaque combinaison de paramètres est une URL distincte, interrogée
+  toutes les 15 à 60 minutes par chaque lecteur abonné, indéfiniment. Il faut normaliser les
+  paramètres (tri, dédoublonnage, minuscules) et **rediriger en 301 vers la forme canonique**
+  pour que les abonnés convergent sur une seule URL ; plafonner le nombre de livres par flux ;
+  mettre en cache sur la clé normalisée ; poser un `throttle`. Rejoint le point « aucune
+  limitation de débit publique » du lot 1.2.
+- **`robots.txt`** : autoriser les flux canoniques, interdire les variantes paramétrées, sinon
+  le site offre un espace de crawl illimité.
+- **Conformité Atom** : `<id>` stable dérivé de la requête normalisée, `<link rel="self">`
+  pointant l'URL exacte avec ses paramètres, et un flux vide qui répond **200 avec zéro
+  entrée** — un 404 pousse les lecteurs à se désabonner d'eux-mêmes.
+- **URL absolues** dans tout le HTML du flux : images, wikilinks, liens internes. C'est le
+  gros du travail — le rendu actuel produit des chemins relatifs, qui cassent hors du site.
 - HTML autonome : pas de classes Tailwind porteuses de sens, pas de dépendance au CSS du site.
 - Dates de publication : `published_at` quand présent, sinon `created_at`.
-- Un chapitre dépublié doit sortir du flux — couvert par le même réflexe de test que le
-  lot 2.3.
-- Limiter le flux (20 dernières entrées) et poser un en-tête de cache raisonnable.
+- Un slug inconnu doit être rejeté explicitement plutôt qu'ignoré : un flux qui se vide sans
+  rien dire est pire qu'une erreur visible.
+- Limiter à 20 entrées et poser un en-tête de cache raisonnable.
+- Un chapitre dépublié doit sortir du flux — même réflexe de test que le lot 2.3.
 
 ### Extension sans code : l'infolettre
 
