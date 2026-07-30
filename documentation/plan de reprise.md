@@ -337,13 +337,27 @@ simple mise en avant ; la page de composition s'adresse à qui veut affiner.
 
 ### Points techniques
 
-- **Le renommage de slug casse les abonnements en silence.** `BookController::update()`
-  accepte un nouveau slug après publication. Contrairement à un lien mort, personne ne
-  signalera un flux mort — le lecteur affichera simplement « rien de neuf ». Trois sorties :
-  interdire le changement de slug une fois le livre publié, tenir un historique des slugs
-  avec redirection, ou avertir dans le formulaire admin. **À trancher avant de livrer le
-  lot** — recommandation : avertissement maintenant, historique plus tard si les renommages
-  s'avèrent fréquents.
+- **Le slug devient figé après publication — décision prise.** `BookController::update()`
+  accepte aujourd'hui un nouveau slug après publication. Contrairement à un lien mort,
+  personne ne signalera un flux mort : le lecteur affichera simplement « rien de neuf ».
+  La règle retenue est donc de refuser le renommage plutôt que de tenir un historique de
+  redirections.
+
+  Portée exacte :
+
+  - **Le gel est définitif**, pas conditionnel à l'état courant. Dépublier, renommer,
+    republier contournerait la règle et casserait quand même les abonnés acquis pendant la
+    première publication. Il faut donc mémoriser qu'un livre *a été* publié — un
+    `slug_locked_at`, ou simplement verrouiller dès la première mise en publication.
+  - **Les chapitres aussi.** Leur slug compose l'URL d'une entrée de flux, qui sert d'`<id>`
+    Atom : le renommer fait réapparaître l'entrée comme neuve chez tous les abonnés. Même
+    règle qu'un livre.
+  - **Validation côté serveur**, pas seulement un champ désactivé dans le formulaire. Le
+    champ passe en lecture seule avec une explication, mais la règle vit dans le contrôleur.
+  - Le titre, lui, reste librement modifiable : seul le slug est gelé.
+
+  Ce point peut être avancé au lot 2.5, qui écrit précisément les tests d'écriture des livres
+  et des chapitres — la validation et son test s'y logent naturellement.
 - **Espace d'URL infini.** Chaque combinaison de paramètres est une URL distincte, interrogée
   toutes les 15 à 60 minutes par chaque lecteur abonné, indéfiniment. Il faut normaliser les
   paramètres (tri, dédoublonnage, minuscules) et **rediriger en 301 vers la forme canonique**
