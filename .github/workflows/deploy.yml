@@ -1,0 +1,83 @@
+name: Déploiement
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un seul déploiement à la fois, et on ne l'annule jamais en cours de route : couper un
+# rsync ou une migration à mi-parcours laisserait le serveur dans un état incohérent.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Tests et style
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Déployer en production
+    needs: test
+    runs-on: ubuntu-latest
+    # Pour exiger une approbation manuelle avant chaque mise en production, créer un
+    # environnement « production » dans les réglages du dépôt et ajouter ici :
+    #   environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Préparer la clé SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Synchroniser les fichiers
+        env:
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          REMOTE_DIR: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy -p $SSH_PORT" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='storage' \
+            --exclude='bootstrap/cache' \
+            --exclude='tests' \
+            --exclude='.DS_Store' \
+            --exclude='sync-watch.sh' \
+            arquanzia-backend/ "$SSH_USER@$SSH_HOST:$REMOTE_DIR/"
+
+      - name: Installer les dépendances, migrer et régénérer les caches
+        env:
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          REMOTE_DIR: ${{ secrets.DEPLOY_PATH }}
+          PHP_BIN: ${{ secrets.DEPLOY_PHP_BIN }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "set -e
+             cd '$REMOTE_DIR'
+             '$PHP_BIN' \$(which composer) install --no-dev --optimize-autoloader --no-interaction
+             '$PHP_BIN' artisan migrate --force
+             '$PHP_BIN' artisan view:clear
+             '$PHP_BIN' artisan cache:clear
+             '$PHP_BIN' artisan config:cache
+             '$PHP_BIN' artisan route:cache
+             chmod -R 775 storage bootstrap/cache"
+
+      - name: Vérifier que le site répond
+        env:
+          HEALTH_URL: ${{ secrets.DEPLOY_HEALTH_URL }}
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$HEALTH_URL")
+          echo "GET $HEALTH_URL → $code"
+          test "$code" = "200"
