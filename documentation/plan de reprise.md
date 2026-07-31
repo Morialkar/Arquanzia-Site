@@ -46,7 +46,7 @@ d'écrire `admin_email`.
 JSON avec un statut 500. Chemins serveur, requêtes SQL et détails d'implémentation exposés à
 n'importe quel visiteur. Correctif : journaliser l'exception, renvoyer un message neutre.
 
-### 0.5 — Vérifier `APP_DEBUG` sur le serveur — ⚠️ à faire par Naomi
+### 0.5 — Vérifier `APP_DEBUG` sur le serveur — ✅ vérifié : `false` en production
 
 Le `.env` local porte `APP_ENV=production` avec `APP_DEBUG=true` et `LOG_LEVEL=debug`. Le
 `.env` n'est pas synchronisé, donc l'état du serveur est inconnu — **à vérifier en premier**.
@@ -71,7 +71,7 @@ en publié depuis le back-office, où ils portent un badge « Brouillon ».
 
 ---
 
-## Lot 1 — Audit de sécurité
+## Lot 1 — Audit de sécurité ✅ fait (commit `652f546`)
 
 ### 1.1 — Points vérifiés et sains
 
@@ -85,18 +85,23 @@ en publié depuis le back-office, où ils portent un badge « Brouillon ».
 
 ### 1.2 — À corriger
 
-| Gravité | Sujet | Détail |
+| Gravité | Sujet | État |
 |---|---|---|
-| Élevée | `APP_DEBUG` en production | Voir 0.5 |
-| Élevée | Fuite d'exceptions | Voir 0.4 |
-| Élevée | Déconnexion inopérante | Voir 0.2 |
-| Moyenne | **Téléversement de SVG brut** | `Admin\SettingsController::updateLogo()` accepte le SVG et le déplace tel quel dans `storage/app/public/logos/`, servi ensuite depuis la même origine que le site. Un SVG peut contenir `<script>`. Réservé aux admins, donc pas une porte ouverte, mais un XSS stocké permanent en cas de compte admin compromis. Correctif : assainir le SVG (retirer `script`, `on*`, `foreignObject`) ou servir les logos avec `Content-Disposition: attachment` / depuis un sous-domaine distinct. |
-| Moyenne | Aucune CSP | Aggravée par le chargement de Tailwind et Google Fonts depuis des CDN tiers : le site exécute du JavaScript distant sur toutes ses pages. Poser une CSP suppose d'abord de rapatrier ces ressources (lot 5.1). |
-| Moyenne | Cookies de session | `SESSION_ENCRYPT=false`, `SESSION_DOMAIN=null`, durée de vie 30 jours. Vérifier `secure`, `http_only`, `same_site=lax` dans `config/session.php` et forcer HTTPS. |
-| Moyenne | Aucune limitation de débit publique | `/api/recherche` et `/api/reader-preferences` sont ouverts sans limite. Chaque appel de recherche déclenche trois `LIKE %…%` sans index : facilement saturable. Ajouter `throttle`. |
-| Faible | Médias sans contrôle d'accès | `MediaController::show()` sert tout média à qui connaît son identifiant (UUID, donc non énumérable). À confirmer comme choix assumé, le README affirme l'inverse. |
-| Faible | Traversée de chemin | `DownloadController::downloadImage()` compose des chemins depuis `$media->filename`. Valeur écrite par un admin, donc risque théorique — à borner par une validation de nom de fichier. |
-| Faible | `EncyclopediaImportService` | Import de fichiers depuis une archive : à relire pour la traversée de chemin et les types de fichiers acceptés. |
+| Élevée | `APP_DEBUG` en production | ✅ vérifié à `false` par Naomi |
+| Élevée | Fuite d'exceptions | ✅ corrigé (lot 0.4) |
+| Élevée | Déconnexion inopérante | ✅ corrigé (lot 0.2) |
+| Moyenne | Téléversement de SVG brut | ✅ corrigé — `App\Services\SvgSanitizer` retire scripts, `foreignObject`, attributs d'événement, URL `javascript:` et DOCTYPE porteurs d'entités. Le téléversement passe par la façade `Storage`, ce qui le rend enfin testable. |
+| Moyenne | Cookies de session | ✅ corrigé — `secure` exigé en production (il était indéfini, le cookie pouvait voyager en clair) et chiffrement des sessions activé, puisqu'elles vivent en base et donc dans les sauvegardes. |
+| Moyenne | Aucune limitation de débit publique | ✅ corrigé — 30 requêtes/minute sur `/recherche`, 60 sur `/api/recherche`. L'endpoint des préférences de lecture a disparu avec le lot 4. |
+| Faible | Traversée de chemin | ✅ corrigé — `DownloadController::downloadImage()` ne garde que le nom de fichier nu et refuse tout chemin stocké remontant l'arborescence. |
+| Faible | `EncyclopediaImportService` | ✅ relu — l'import n'écrit jamais sur le disque : il lit les entrées de l'archive en mémoire via `getFromName()` et ne crée que des enregistrements. Pas de *zip-slip* possible. |
+| Faible | Médias sans contrôle d'accès | ✅ choix assumé — tout le contenu est public, `MediaController` n'a plus rien à filtrer. Le README qui affirmait l'inverse a été supprimé au lot 2. |
+| Moyenne | **Aucune CSP** | ⏳ reporté au lot 5.1, à raison. Les gabarits chargent Tailwind depuis un CDN et embarquent la configuration et le sélecteur de thème en scripts intégrés : une CSP exigerait `'unsafe-inline'` et autoriserait un domaine tiers, ce qui la viderait de son sens. Les autres en-têtes utiles sont posés dès maintenant (`nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`). |
+
+### 1.4 — Effet de bord au déploiement
+
+L'activation du chiffrement des sessions **invalide les sessions en cours**. Il faudra se
+reconnecter au back-office après la mise en production.
 
 ### 1.3 — Surface réduite par le lot 4 ✅
 
@@ -564,7 +569,7 @@ alimentée à l'enregistrement.
 6. **Lot 3.5** — le flux RSS/Atom des sorties, petite victoire visible entre deux gros
    chantiers, et fondation d'une éventuelle infolettre sans code.
 7. **Lot 5.1** — les assets, qui débloquent le job de build et la CSP.
-8. **Lot 1** — le reste des correctifs de sécurité, CSP comprise.
+8. **Lot 1** — ✅ fait, sauf la CSP qui dépend du lot 5.1.
 9. **Lot 5** — le reste de la dette, au fil de l'eau.
 
 À noter : les lots 0 et 4 touchent beaucoup les mêmes fichiers (`ViewerResolver`,
