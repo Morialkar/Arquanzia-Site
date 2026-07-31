@@ -100,13 +100,20 @@ class DownloadController extends Controller
             ? \Illuminate\Support\Str::slug($image->caption).'.jpg'
             : 'encyclopedia-image-'.$image->id.'.jpg';
 
+        // Les chemins sont composés à partir de valeurs stockées en base. Elles sont écrites
+        // par l'administration, le risque est donc théorique — mais un nom contenant « ../ »
+        // sortirait du dossier des médias, et rien ne l'empêchait. On ne garde que le nom de
+        // fichier nu, et on refuse tout chemin stocké qui remonterait l'arborescence.
         $possiblePaths = [];
+
         if ($media->filename) {
-            $possiblePaths[] = 'media/'.$media->filename;
-            $possiblePaths[] = 'media/original/'.$media->filename;
+            $safeName = basename($media->filename);
+            $possiblePaths[] = 'media/'.$safeName;
+            $possiblePaths[] = 'media/original/'.$safeName;
         }
-        if ($media->original_path) {
-            $possiblePaths[] = $media->original_path;
+
+        if ($media->original_path && ! str_contains($media->original_path, '..')) {
+            $possiblePaths[] = ltrim($media->original_path, '/');
         }
 
         $foundPath = null;

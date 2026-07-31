@@ -41,8 +41,14 @@ Route::get('/fragments', [\App\Http\Controllers\FragmentController::class, 'inde
 Route::get('/fragments/{path}', [\App\Http\Controllers\FragmentController::class, 'show'])
     ->where('path', '.*')->name('fragments.show');
 
-Route::get('/recherche', [\App\Http\Controllers\SearchController::class, 'search'])->name('search');
-Route::get('/api/recherche', [\App\Http\Controllers\SearchController::class, 'api'])->name('search.api');
+// La recherche déclenche trois LIKE %…% sans index utilisable : elle est la surface
+// publique la plus facile à saturer. L'API, appelée à la frappe, tolère plus d'appels.
+Route::get('/recherche', [\App\Http\Controllers\SearchController::class, 'search'])
+    ->middleware('throttle:30,1')
+    ->name('search');
+Route::get('/api/recherche', [\App\Http\Controllers\SearchController::class, 'api'])
+    ->middleware('throttle:60,1')
+    ->name('search.api');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');

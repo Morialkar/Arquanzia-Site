@@ -47,7 +47,9 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    // Les sessions sont stockées en base : les chiffrer protège leur contenu au repos,
+    // notamment dans les sauvegardes de la base.
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +171,9 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Sans valeur, le drapeau restait indéfini et le cookie de session pouvait voyager en
+    // clair. Il est exigé en production, et laissé libre ailleurs pour le développement local.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Services\SvgSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +25,7 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function updateLogo(Request $request): RedirectResponse
+    public function updateLogo(Request $request, SvgSanitizer $sanitizer): RedirectResponse
     {
         $request->validate([
             'logo' => 'required|file|mimes:svg,png,jpg,jpeg,webp|max:2048',
@@ -37,31 +38,25 @@ class SettingsController extends Controller
 
         $file = $request->file('logo');
         $extension = strtolower($file->getClientOriginalExtension());
+        $path = 'logos/logo_'.time().'_'.bin2hex(random_bytes(4)).'.'.$extension;
 
         if ($extension === 'svg') {
-            $filename = 'logos/logo_'.time().'_'.bin2hex(random_bytes(4)).'.svg';
-
-            if (! is_dir(storage_path('app/public/logos'))) {
-                mkdir(storage_path('app/public/logos'), 0755, true);
+            // Un SVG est un document exécuté par le navigateur, servi ici depuis la même
+            // origine que le site : il est assaini avant d'être écrit, jamais déplacé tel quel.
+            try {
+                $contents = $sanitizer->sanitize((string) file_get_contents($file->getRealPath()));
+            } catch (\RuntimeException $e) {
+                return back()->withErrors(['logo' => $e->getMessage()]);
             }
-
-            $file->move(storage_path('app/public/logos'), basename($filename));
-            $path = $filename;
         } else {
-            $manager = new ImageManager(new Driver);
-            $image = $manager->read($file->getRealPath());
+            $image = (new ImageManager(new Driver))->read($file->getRealPath());
             $image->trim();
-
-            $filename = 'logos/logo_'.time().'_'.bin2hex(random_bytes(4)).'.'.$extension;
-            $fullPath = storage_path('app/public/'.$filename);
-
-            if (! is_dir(dirname($fullPath))) {
-                mkdir(dirname($fullPath), 0755, true);
-            }
-
-            $image->save($fullPath);
-            $path = $filename;
+            $contents = (string) $image->encodeByExtension($extension);
         }
+
+        // Tout passe par la façade Storage : le disque reste substituable dans les tests, et
+        // les chemins ne sont plus reconstruits à la main.
+        Storage::disk('public')->put($path, $contents);
 
         SiteSetting::set('site_logo', $path);
 
