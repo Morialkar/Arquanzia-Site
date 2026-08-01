@@ -26,6 +26,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Installer Node et construire les assets
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: arquanzia-backend/package-lock.json
+
+      - name: Construire les assets
+        # public/build n'est pas versionné : il est fabriqué ici, puis synchronisé avec le
+        # reste. Le serveur mutualisé n'a pas Node, la construction ne peut pas s'y faire.
+        working-directory: arquanzia-backend
+        run: |
+          npm ci
+          npm run build
+
       - name: Préparer la connexion SSH
         env:
           SSH_USER: ${{ secrets.DEPLOY_USER }}
@@ -77,7 +92,6 @@ jobs:
             --exclude='bootstrap/cache' \
             --exclude='tests' \
             --exclude='.DS_Store' \
-            --exclude='sync-watch.sh' \
             arquanzia-backend/ "cible:$REMOTE_DIR/"
 
       - name: Installer les dépendances, migrer et régénérer les caches

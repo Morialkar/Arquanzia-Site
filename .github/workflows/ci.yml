@@ -52,5 +52,19 @@ jobs:
       - name: Vérifier le style (Pint)
         run: ./vendor/bin/pint --test
 
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: arquanzia-backend/package-lock.json
+
+      - name: Construire les assets
+        # Avant les tests, et non après : les gabarits appellent @vite, qui exige le
+        # manifeste de construction. Sans lui, le rendu de la moindre page échoue.
+        run: |
+          npm ci
+          npm run build
+
       - name: Lancer la suite de tests
         run: php artisan test

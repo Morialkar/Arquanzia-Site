@@ -5,50 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Admin' }} - Arquanzia</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'arq': {
-                            'mint': '#5FFEB0',
-                            'forest': '#0E3B2E',
-                            'forest-light': '#1A5742',
-                            'ink': '#0E0E0E',
-                            'parchment': '#F7F4EC',
-                            'parchment-dark': '#EDE8DC',
-                            'bark': '#5A4632',
-                            'copper': '#B87333',
-                            'amber': '#D4A574',
-                            'night': '#1C1714',
-                            'night-card': '#2A2420',
-                            'night-border': '#4A3F37',
-                        }
-                    },
-                    fontFamily: {
-                        'serif': ['Cormorant Garamond', 'Georgia', 'serif'],
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        .admin-card {
-            background: #F7F4EC;
-            border: 1px solid rgba(212, 165, 116, 0.2);
-            border-radius: 0.75rem 0.5rem 0.75rem 0.5rem;
-        }
-        .dark .admin-card {
-            background: #1a1a1a;
-            border-color: rgba(95, 254, 176, 0.15);
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-arq-mint dark:bg-gray-900 min-h-screen font-sans text-arq-ink dark:text-gray-100">
     @php
