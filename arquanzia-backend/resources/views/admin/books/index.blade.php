@@ -42,7 +42,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm space-x-2">
                             <a href="{{ route('admin.books.edit', $book) }}" class="text-arq-forest hover:text-arq-forest-light">Éditer</a>
-                            <form action="{{ route('admin.books.destroy', $book) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer ce livre ?')">
+                            <form action="{{ route('admin.books.destroy', $book) }}" method="POST" class="inline" data-confirmer="Supprimer ce livre ?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Supprimer</button>
@@ -90,7 +90,7 @@
                     <a href="{{ route('admin.books.edit', $book) }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-arq-forest text-arq-parchment text-sm font-medium shadow-sm hover:bg-arq-forest-light transition-colors">
                         Éditer
                     </a>
-                    <form action="{{ route('admin.books.destroy', $book) }}" method="POST" onsubmit="return confirm('Supprimer ce livre ?')" class="inline-flex">
+                    <form action="{{ route('admin.books.destroy', $book) }}" method="POST" data-confirmer="Supprimer ce livre ?" class="inline-flex">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition-colors">

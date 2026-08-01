@@ -23,7 +23,7 @@
                             </span>
                         </div>
                         @if($isRoot)
-                            <form action="{{ route('admin.admins.destroy', $admin) }}" method="POST" onsubmit="return confirm('Retirer cet admin ?')">
+                            <form action="{{ route('admin.admins.destroy', $admin) }}" method="POST" data-confirmer="Retirer cet admin ?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline text-sm">Retirer</button>

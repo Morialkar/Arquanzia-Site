@@ -3,7 +3,11 @@
     "name": "morialkar/arquanzia",
     "type": "project",
     "description": "Le site de l'univers d'Arquanzia : encyclopédie, bibliothèque, fil et fragments.",
-    "keywords": ["arquanzia", "encyclopedie", "bibliotheque"],
+    "keywords": [
+        "arquanzia",
+        "encyclopedie",
+        "bibliotheque"
+    ],
     "license": "proprietary",
     "require": {
         "php": "^8.2",
@@ -29,7 +33,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Support/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

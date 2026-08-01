@@ -150,11 +150,13 @@
                                                                class="rounded border-arq-amber/40 dark:border-white/20">
                                                         <span>Téléchargeable</span>
                                                     </label>
-                                                    <button type="button" 
-                                                            onclick="if(confirm('Supprimer cette image ?')) { 
-                                                                window.location.href='{{ route('admin.encyclopedia.gallery.destroy', ['encyclopedium' => $node, 'image' => $img]) }}?_token={{ csrf_token() }}&_method=DELETE'; 
-                                                            }" 
-                                                            class="ml-auto bg-red-600 text-white rounded px-2 py-1 text-xs hover:bg-red-700">Supprimer</button>
+                                                    <form action="{{ route('admin.encyclopedia.gallery.destroy', ['encyclopedium' => $node, 'image' => $img]) }}"
+                                                          method="POST" class="ml-auto"
+                                                          data-confirmer="Supprimer cette image ?">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="bg-red-600 text-white rounded px-2 py-1 text-xs hover:bg-red-700">Supprimer</button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -176,7 +178,7 @@
 </form>
 
 @if(!$node)
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         document.querySelector('select[name="type"]').addEventListener('change', function() {
             document.getElementById('article-fields').style.display = this.value === 'article' ? 'block' : 'none';
         });

@@ -15,7 +15,7 @@
                         <a href="{{ route('admin.encyclopedia.create', ['parent' => $node->id]) }}" class="text-green-700 dark:text-green-300 hover:underline">+ Enfant</a>
                     @endif
                     <a href="{{ route('admin.encyclopedia.edit', ['encyclopedium' => $node]) }}" class="text-indigo-600 dark:text-indigo-300 hover:underline">Éditer</a>
-                    <form action="{{ route('admin.encyclopedia.destroy', ['encyclopedium' => $node]) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer cet élément et ses enfants ?')">
+                    <form action="{{ route('admin.encyclopedia.destroy', ['encyclopedium' => $node]) }}" method="POST" class="inline" data-confirmer="Supprimer cet élément et ses enfants ?">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-600 dark:text-red-300 hover:underline">Supprimer</button>

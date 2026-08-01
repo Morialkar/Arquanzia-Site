@@ -89,7 +89,7 @@
         <p id="lightbox-caption" class="absolute bottom-4 left-0 right-0 text-center text-white text-sm px-4"></p>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         document.addEventListener('DOMContentLoaded', function() {
             const images = document.querySelectorAll('.lightbox-image');
             const lightbox = document.getElementById('lightbox');

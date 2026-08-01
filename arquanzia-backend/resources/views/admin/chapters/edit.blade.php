@@ -15,9 +15,9 @@
     <h1 class="font-serif text-2xl font-bold text-arq-forest dark:text-arq-mint mb-6">Éditer: {{ $chapter->title }}</h1>
 
     <form action="{{ route('admin.chapters.update', [$book, $chapter]) }}" method="POST"
-        data-slug-initial="{{ $chapter->slug }}"
-        data-chapter-published="{{ $chapter->is_published ? '1' : '0' }}"
-        onsubmit="return arqConfirmSlugChange(this)"
+        @if($chapter->is_published)
+            data-slug-initial="{{ $chapter->slug }}"
+        @endif
         class="bg-arq-parchment dark:bg-arq-night-card rounded-xl shadow-parchment dark:shadow-none border border-arq-amber/20 dark:border-arq-mint/20 p-6 space-y-6">
         @csrf
         @method('PUT')
@@ -99,29 +99,9 @@
         </div>
     </form>
 
-    <form action="{{ route('admin.chapters.destroy', [$book, $chapter]) }}" method="POST" onsubmit="return confirm('Supprimer ce chapitre ?')" class="mt-4">
+    <form action="{{ route('admin.chapters.destroy', [$book, $chapter]) }}" method="POST" data-confirmer="Supprimer ce chapitre ?" class="mt-4">
         @csrf
         @method('DELETE')
         <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Supprimer ce chapitre</button>
     </form>
 </x-layouts.admin>
-
-    <script>
-        function arqConfirmSlugChange(form) {
-            if (form.dataset.chapterPublished !== '1') {
-                return true;
-            }
-
-            var field = form.querySelector('input[name="slug"]');
-            if (!field || field.value === form.dataset.slugInitial) {
-                return true;
-            }
-
-            return confirm(
-                'Avertissement — ce chapitre est publié.\n\n' +
-                'Changer son slug modifie son adresse : les anciens liens cesseront de fonctionner, ' +
-                'et le chapitre reparaîtra comme une nouveauté auprès des personnes abonnées au flux RSS.\n\n' +
-                'Continuer ?'
-            );
-        }
-    </script>

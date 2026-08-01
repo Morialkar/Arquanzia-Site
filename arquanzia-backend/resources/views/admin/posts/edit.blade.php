@@ -61,7 +61,7 @@
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="is_pinned" value="1" {{ $post->is_pinned ? 'checked' : '' }}
                             class="rounded border-arq-amber/40 text-arq-forest focus:ring-indigo-500"
-                            onchange="document.getElementById('pinned-section').classList.toggle('hidden', !this.checked)">
+                            data-bascule="#pinned-section">
                         <span class="text-sm text-gray-700">📌 Épingler</span>
                     </label>
                     <select name="pinned_section" id="pinned-section" class="{{ $post->is_pinned ? '' : 'hidden' }} px-3 py-1 border border-arq-amber/40 rounded text-sm">

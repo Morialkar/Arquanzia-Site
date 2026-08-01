@@ -51,7 +51,7 @@
                                 <td class="px-4 py-3 md:px-6 md:py-4 text-sm md:text-right flex md:block items-center justify-end gap-3">
                                     <span class="md:hidden text-xs uppercase text-arq-bark/50 dark:text-arq-mint/60">Actions</span>
                                     <a href="{{ route('admin.wikilinks.edit', $wikilink) }}" class="text-arq-forest hover:text-arq-forest-light md:mr-3 dark:text-arq-mint dark:hover:text-arq-mint/80">Modifier</a>
-                                    <form action="{{ route('admin.wikilinks.destroy', $wikilink) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer ce wikilink ?')">
+                                    <form action="{{ route('admin.wikilinks.destroy', $wikilink) }}" method="POST" class="inline" data-confirmer="Supprimer ce wikilink ?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition

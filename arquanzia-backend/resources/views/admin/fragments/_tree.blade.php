@@ -15,7 +15,7 @@
                         <a href="{{ route('admin.fragments.create', ['parent' => $node->id]) }}" class="text-green-700 dark:text-green-300 hover:underline">+ Enfant</a>
                     @endif
                     <a href="{{ route('admin.fragments.edit', $node) }}" class="text-indigo-600 dark:text-indigo-300 hover:underline">Éditer</a>
-                    <form action="{{ route('admin.fragments.destroy', $node) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer cet élément ?')">
+                    <form action="{{ route('admin.fragments.destroy', $node) }}" method="POST" class="inline" data-confirmer="Supprimer cet élément ?">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-600 dark:text-red-300 hover:underline">Supprimer</button>

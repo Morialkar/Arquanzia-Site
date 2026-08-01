@@ -25,7 +25,7 @@
                     </div>
                     <div class="mt-4 flex flex-wrap items-center justify-end gap-3">
                         <a href="{{ route('admin.posts.edit', $post) }}" class="text-arq-forest dark:text-arq-mint hover:text-arq-forest-light dark:hover:text-arq-mint/80 font-medium">Modifier</a>
-                        <form action="{{ route('admin.posts.destroy', $post) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer ce post ?')">
+                        <form action="{{ route('admin.posts.destroy', $post) }}" method="POST" class="inline" data-confirmer="Supprimer ce post ?">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 dark:text-red-300 hover:underline font-medium">Supprimer</button>

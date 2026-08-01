@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         (function () {
             var base = @json(route('feeds.atom'));
             var sortie = document.getElementById('flux-url');

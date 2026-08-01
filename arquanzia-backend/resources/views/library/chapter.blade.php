@@ -95,7 +95,7 @@
         </div>
     </article>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         (function() {
             var progressBar = document.getElementById('reading-progress');
             if (progressBar) {

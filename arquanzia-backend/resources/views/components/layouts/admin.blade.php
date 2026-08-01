@@ -149,7 +149,7 @@
         {{ $slot }}
     </main>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         // Admin theme toggle - uses same preference as public site
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
