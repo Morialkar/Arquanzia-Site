@@ -527,18 +527,32 @@ Reste à traiter :
   après, et une migration `drop_printers` la suit immédiatement. Un déploiement à froid crée
   puis détruit la table. À fusionner ou supprimer.
 
-### 5.4 — Remplacer le parseur Markdown maison
+### 5.4 — Markdown ✅ fait (commit `da0c64c`)
 
 `MarkdownHelper` est un parseur ligne à ligne avec des rustines (« fermer le gras impair »,
 « supprimer les lignes d'astérisques »). `league/commonmark` est déjà dans `vendor/`, exposé
 par `Str::markdown()`. Conserver éventuellement un pré-traitement pour les particularités
 Obsidian, mais déléguer le rendu.
 
-### 5.5 — Recherche
+### 5.5 — Recherche ✅ fait
 
-`LIKE %…%` sur les titres uniquement, aucun index utilisable, trois requêtes par appel. Ne
-cherche pas dans le contenu. Piste : index `FULLTEXT` MySQL, ou une table d'index dédiée
-alimentée à l'enregistrement.
+**Correction du diagnostic.** J'avais écrit que `LIKE %…%` « ne scale pas » et proposé un
+index `FULLTEXT` ou une table dédiée. Mesure faite en production : le site compte **quinze
+documents** — deux livres, trois chapitres, neuf entrées d'encyclopédie, un billet. À cette
+échelle un `LIKE` est instantané, et bâtir une infrastructure d'indexation aurait été de
+l'ingénierie pour un problème inexistant.
+
+Le vrai défaut était fonctionnel : la recherche n'interrogeait **que les titres**, et
+seulement ceux des livres, chapitres et entrées d'encyclopédie. Chercher un mot figurant dans
+un chapitre ne donnait rien, et **le fil comme les fragments étaient entièrement
+introuvables** — deux sections du site absentes de sa propre recherche.
+
+Corrigé par un `SearchService` unique qui couvre les cinq sections, fouille titres et
+contenus, classe les correspondances de titre avant celles de texte, et affiche l'extrait
+entourant le terme trouvé — sans quoi rien n'explique pourquoi un résultat est là.
+
+Si le volume venait à croître d'un ou deux ordres de grandeur, l'index dédié redeviendrait
+justifié ; le service isole les requêtes, ce qui rendra la bascule locale.
 
 ### 5.6 — Documentation
 

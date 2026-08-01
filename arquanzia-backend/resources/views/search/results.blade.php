@@ -1,97 +1,49 @@
-<x-layouts.app title="Recherche - Arquanzia">
+<x-layouts.app title="Recherche — Arquanzia" description="Rechercher dans l’univers d’Arquanzia.">
     <div class="max-w-3xl mx-auto">
+        <h1 class="font-serif text-4xl font-bold text-arq-forest mb-6">Recherche</h1>
+
         <form action="{{ route('search') }}" method="GET" class="mb-8">
+            <label for="q" class="sr-only">Termes recherchés</label>
             <div class="flex gap-2">
-                <input type="text" name="q" value="{{ $query }}" placeholder="Rechercher..." 
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg"
-                    autofocus>
-                <button type="submit" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    Rechercher
-                </button>
+                <input type="search" name="q" id="q" value="{{ $query }}" autofocus
+                       placeholder="Un nom, un lieu, un mot du texte…"
+                       class="flex-1 px-4 py-2 rounded-organic-sm border border-arq-amber/40 bg-white text-arq-ink placeholder:text-arq-bark/50 focus:outline-none focus:ring-2 focus:ring-arq-forest">
+                <button type="submit" class="btn-arq btn-arq-primary">Chercher</button>
             </div>
         </form>
 
-        @if($query)
-            <p class="text-gray-600 mb-6">
-                {{ $totalResults }} résultat{{ $totalResults > 1 ? 's' : '' }} pour "{{ $query }}"
+        @if($query === '')
+            <p class="arq-dim">La recherche couvre les titres <em>et</em> le texte des livres, chapitres, entrées d’encyclopédie, fragments et publications du fil.</p>
+        @elseif(mb_strlen(trim($query)) < \App\Services\SearchService::MIN_LENGTH)
+            <p class="arq-dim">Deux caractères au minimum.</p>
+        @elseif($totalResults === 0)
+            <p class="arq-dim">Aucun résultat pour « {{ $query }} ».</p>
+        @else
+            <p class="arq-dim text-sm mb-6">
+                {{ $totalResults }} résultat{{ $totalResults > 1 ? 's' : '' }} pour « {{ $query }} »
             </p>
 
-            @if($totalResults === 0)
-                <div class="bg-gray-50 rounded-xl p-8 text-center">
-                    <span class="text-4xl">🔍</span>
-                    <p class="text-gray-600 mt-4">Aucun résultat trouvé.</p>
-                </div>
-            @else
-                @if($results['books']->count() > 0)
-                    <div class="mb-8">
-                        <h2 class="text-lg font-bold text-gray-800 mb-3">📚 Livres</h2>
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-200">
-                            @foreach($results['books'] as $book)
-                                <a href="{{ route('library.book', $book->slug) }}" class="flex items-center gap-3 p-4 hover:bg-gray-50">
-                                    @if($book->cover)
-                                        <div class="w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                                            <img src="{{ route('media.show', ['media' => $book->cover->id, 'unlocked' => 0]) }}" class="w-full h-full object-cover scale-150" alt="">
-                                        </div>
-                                    @else
-                                        <span class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded flex-shrink-0">📚</span>
-                                    @endif
-                                    <span class="font-medium text-gray-800">{{ $book->title }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                @if($results['chapters']->count() > 0)
-                    <div class="mb-8">
-                        <h2 class="text-lg font-bold text-gray-800 mb-3">📖 Chapitres</h2>
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-200">
-                            @foreach($results['chapters'] as $chapter)
-                                <a href="{{ route('library.chapter', ['book' => $chapter->book->slug, 'chapter' => $chapter->slug]) }}" class="flex items-center gap-3 p-4 hover:bg-gray-50">
-                                    @if($chapter->book->cover)
-                                        <div class="w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                                            <img src="{{ route('media.show', ['media' => $chapter->book->cover->id, 'unlocked' => 0]) }}" class="w-full h-full object-cover scale-150" alt="">
-                                        </div>
-                                    @else
-                                        <span class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded flex-shrink-0">📖</span>
-                                    @endif
-                                    <div>
-                                        <span class="font-medium text-gray-800">{{ $chapter->title }}</span>
-                                        <span class="text-gray-500 text-sm ml-2">dans {{ $chapter->book->title }}</span>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                @if($results['encyclopedia']->count() > 0)
-                    <div class="mb-8">
-                        <h2 class="text-lg font-bold text-gray-800 mb-3">📜 Encyclopédie</h2>
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-200">
-                            @foreach($results['encyclopedia'] as $node)
-                                <a href="{{ route('encyclopedia.show', $node->getFullPath()) }}" class="flex items-center gap-3 p-4 hover:bg-gray-50">
-                                    @if($node->article?->cover)
-                                        <div class="w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                                            <img src="{{ route('media.show', ['media' => $node->article->cover->id, 'unlocked' => 0]) }}" class="w-full h-full object-cover scale-150" alt="">
-                                        </div>
-                                    @else
-                                        <span class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded flex-shrink-0">📜</span>
-                                    @endif
-                                    <div>
-                                        <span class="font-medium text-gray-800">{{ $node->title }}</span>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-            @endif
-        @else
-            <div class="bg-gray-50 rounded-xl p-8 text-center">
-                <span class="text-4xl">🔍</span>
-                <p class="text-gray-600 mt-4">Entrez un terme de recherche (minimum 2 caractères).</p>
-            </div>
+            <ul class="space-y-4">
+                @foreach($results as $result)
+                    <li class="card-arq p-4">
+                        <a href="{{ $result['url'] }}" class="flex gap-4 group">
+                            @if($result['thumbnail'])
+                                <img src="{{ $result['thumbnail'] }}" alt=""
+                                     class="w-14 h-14 rounded-organic-sm object-cover shrink-0">
+                            @endif
+                            <div class="min-w-0">
+                                <p class="text-xs uppercase tracking-[0.2em] text-arq-bark/60">
+                                    {{ $result['label'] }}@if($result['context']) · {{ $result['context'] }}@endif
+                                </p>
+                                <p class="font-serif text-lg text-arq-forest group-hover:underline">{{ $result['title'] }}</p>
+                                @if($result['excerpt'])
+                                    <p class="arq-dim text-sm mt-1">{{ $result['excerpt'] }}</p>
+                                @endif
+                            </div>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
         @endif
     </div>
 </x-layouts.app>
