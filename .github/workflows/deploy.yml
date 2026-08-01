@@ -111,8 +111,13 @@ jobs:
           # vérification tirée dans la seconde qui suit route:cache peut voir une 404 alors
           # que le déploiement est correct. On laisse donc au serveur le temps de reprendre
           # la main, plutôt que d'échouer sur une course perdue d'avance.
+          # Un agent utilisateur explicite : certains hébergements mutualisés filtrent ou
+          # dévient les requêtes portant l'agent par défaut de curl, ce qui produit une 404
+          # trompeuse alors que le site est sain.
+          AGENT='Arquanzia-Deploy-Healthcheck/1.0 (+https://github.com/Morialkar/Arquanzia-Site)'
+
           for tentative in 1 2 3 4 5; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$HEALTH_URL" || echo 000)
+            code=$(curl -sSL -A "$AGENT" -o /dev/null -w '%{http_code}' --max-time 30 "$HEALTH_URL" || echo 000)
             echo "Tentative $tentative → HTTP $code"
 
             if [ "$code" = "200" ]; then
@@ -123,5 +128,8 @@ jobs:
             sleep 10
           done
 
-          echo "Le site n'a pas répondu 200 après 5 tentatives sur 50 secondes."
+          echo
+          echo "Le site n'a pas répondu 200 après 5 tentatives."
+          echo "En-têtes de la dernière réponse, pour distinguer une route absente d'un blocage :"
+          curl -sSIL -A "$AGENT" --max-time 30 "$HEALTH_URL" | head -20 || true
           exit 1
