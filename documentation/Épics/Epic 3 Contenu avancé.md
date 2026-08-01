@@ -1,3 +1,10 @@
+> ⚠️ **Document partiellement périmé.** Il décrit la bibliothèque et l'encyclopédie telles
+> qu'elles existent, routes françaises comprises. En revanche tout ce qui concerne le palier
+> « Lecteur », le verrouillage de contenu, les CTA d'accès, les règles de bannissement et les
+> pages `/connexion`, `/mon-compte`, `/mon-acces` ne s'applique plus : le site n'a pas de
+> compte lecteur et tout le contenu est en lecture publique. La seule règle d'accès est le
+> statut de publication. Voir `documentation/plan de reprise.md`.
+
 ⸻
 
 OBJECTIF
