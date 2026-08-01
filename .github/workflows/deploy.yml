@@ -26,23 +26,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Préparer la clé SSH
+      - name: Préparer la connexion SSH
+        env:
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+          # Un alias décrit la cible une bonne fois : les étapes suivantes n'ont plus à
+          # répéter les options, et ne peuvent plus diverger entre elles.
+          #
+          # IdentitiesOnly est le point décisif. L'option -i *ajoute* une clé à la liste des
+          # identités proposées, elle n'y restreint pas : le client offrait aussi les clés
+          # par défaut et celles de l'agent, et le serveur coupait la connexion à sa limite
+          # MaxAuthTries avec « Too many authentication failures ».
+          cat > ~/.ssh/config <<EOF
+          Host cible
+            HostName $SSH_HOST
+            User $SSH_USER
+            Port $SSH_PORT
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            BatchMode yes
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Vérifier l'accès au serveur
+        # Étape de diagnostic : sans elle, un problème d'authentification se manifeste au
+        # milieu d'un rsync et son message se perd dans la sortie du transfert.
+        run: ssh cible 'echo "Connexion SSH établie sur $(hostname)"'
+
       - name: Synchroniser les fichiers
         env:
-          SSH_USER: ${{ secrets.DEPLOY_USER }}
-          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
-          SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
           REMOTE_DIR: ${{ secrets.DEPLOY_PATH }}
         run: |
           rsync -az --delete \
-            -e "ssh -i ~/.ssh/id_deploy -p $SSH_PORT" \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='.env' \
@@ -53,17 +78,14 @@ jobs:
             --exclude='tests' \
             --exclude='.DS_Store' \
             --exclude='sync-watch.sh' \
-            arquanzia-backend/ "$SSH_USER@$SSH_HOST:$REMOTE_DIR/"
+            arquanzia-backend/ "cible:$REMOTE_DIR/"
 
       - name: Installer les dépendances, migrer et régénérer les caches
         env:
-          SSH_USER: ${{ secrets.DEPLOY_USER }}
-          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
-          SSH_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
           REMOTE_DIR: ${{ secrets.DEPLOY_PATH }}
           PHP_BIN: ${{ secrets.DEPLOY_PHP_BIN }}
         run: |
-          ssh -i ~/.ssh/id_deploy -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+          ssh cible \
             "set -e
              cd '$REMOTE_DIR'
              '$PHP_BIN' \$(which composer) install --no-dev --optimize-autoloader --no-interaction
