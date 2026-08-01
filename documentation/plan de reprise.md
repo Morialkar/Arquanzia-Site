@@ -96,7 +96,7 @@ en publié depuis le back-office, où ils portent un badge « Brouillon ».
 | Faible | Traversée de chemin | ✅ corrigé — `DownloadController::downloadImage()` ne garde que le nom de fichier nu et refuse tout chemin stocké remontant l'arborescence. |
 | Faible | `EncyclopediaImportService` | ✅ relu — l'import n'écrit jamais sur le disque : il lit les entrées de l'archive en mémoire via `getFromName()` et ne crée que des enregistrements. Pas de *zip-slip* possible. |
 | Faible | Médias sans contrôle d'accès | ✅ choix assumé — tout le contenu est public, `MediaController` n'a plus rien à filtrer. Le README qui affirmait l'inverse a été supprimé au lot 2. |
-| Moyenne | **Aucune CSP** | ⏳ reporté au lot 5.1, à raison. Les gabarits chargent Tailwind depuis un CDN et embarquent la configuration et le sélecteur de thème en scripts intégrés : une CSP exigerait `'unsafe-inline'` et autoriserait un domaine tiers, ce qui la viderait de son sens. Les autres en-têtes utiles sont posés dès maintenant (`nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`). |
+| Moyenne | Aucune CSP | ✅ corrigée au lot 5.2, une fois les obstacles levés. Les gabarits chargent Tailwind depuis un CDN et embarquent la configuration et le sélecteur de thème en scripts intégrés : une CSP exigerait `'unsafe-inline'` et autoriserait un domaine tiers, ce qui la viderait de son sens. Les autres en-têtes utiles sont posés dès maintenant (`nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`). |
 
 ### 1.4 — Effet de bord au déploiement
 
@@ -492,7 +492,7 @@ s'affichait publiquement. Une promesse de confidentialité que le site ne tenait
 
 ## Lot 5 — Dette technique
 
-### 5.1 — Rapatrier les assets (le plus impactant)
+### 5.1 — Rapatrier les assets ✅ fait (commit `a775762`)
 
 Tailwind est chargé depuis `cdn.tailwindcss.com` dans les deux gabarits, avec la
 configuration en ligne, alors que **Vite et Tailwind 4 sont installés et configurés**… et
@@ -504,7 +504,7 @@ Idem pour Google Fonts alors que `public/fonts/` contient déjà les polices.
 
 C'est aussi le préalable à la CSP (1.2) et au job `build` (3.2).
 
-### 5.2 — Découper `app.blade.php`
+### 5.2 — Découper `app.blade.php` ✅ fait (commit `d6e64e6`)
 
 1095 lignes : configuration Tailwind, thème clair/sombre, navigation desktop, navigation
 mobile, JavaScript. À éclater en composants.
@@ -549,7 +549,22 @@ alimentée à l'enregistrement.
   abandonnée. À archiver dans un dossier `historique/` plutôt qu'à supprimer — ils expliquent
   pourquoi le code ressemblait à ça.
 
-### 5.7 — Accessibilité
+### 5.6 — Reliquat du rapatriement des assets
+
+Laissé de côté sciemment lors des lots 5.1 et 5.2, et signalé plutôt que masqué :
+
+- **`style-src` garde `'unsafe-inline'`.** Des attributs `style=` subsistent dans les
+  gabarits, et un nonce ne les couvre pas. Le verrou est de bien moindre portée que celui des
+  scripts — un style injecté ne s'exécute pas — mais la politique n'est pas totale tant qu'il
+  reste ouvert.
+- **Le back-office duplique la logique de thème.** Son gabarit garde une cinquantaine de
+  lignes de script intégré qui refont ce que `resources/js/theme.js` sait déjà faire. À
+  unifier, ce qui supprimerait un des six derniers scripts en ligne.
+- **Les scripts de page restants** — lecture d'un chapitre, article d'encyclopédie,
+  composition de flux, formulaire d'encyclopédie — fonctionnent grâce au nonce, mais
+  gagneraient à devenir des modules comme les autres.
+
+### 5.7 — Accessibilité ✅ fait
 
 `user-scalable=no` dans la balise viewport du gabarit public empêche le zoom sur mobile.
 

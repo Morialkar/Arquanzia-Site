@@ -72,6 +72,58 @@ class MarkdownHelperTest extends TestCase
         $this->assertStringContainsString('<br', $html);
     }
 
+    /**
+     * Le rendu appliquait nl2br() au HTML produit, ce qui insérait un <br /> après chaque
+     * balise de bloc : un saut fantôme après chaque paragraphe, chaque liste et chaque
+     * élément de liste. Les sauts simples viennent désormais de CommonMark lui-même.
+     */
+    public function test_aucun_saut_fantome_entre_les_blocs(): void
+    {
+        $html = MarkdownHelper::render("Premier paragraphe.\n\nSecond paragraphe.");
+
+        $this->assertStringNotContainsString('</p><br />', $html);
+        $this->assertStringNotContainsString("</p>\n<br />", $html);
+    }
+
+    public function test_une_liste_ne_recoit_pas_de_sauts_parasites(): void
+    {
+        $html = MarkdownHelper::render("- un\n- deux");
+
+        $this->assertStringNotContainsString('</li><br />', $html);
+        $this->assertStringNotContainsString('</ul><br />', $html);
+        $this->assertStringNotContainsString("</li>\n<br />", $html);
+    }
+
+    public function test_un_saut_simple_reste_dans_le_paragraphe(): void
+    {
+        $html = MarkdownHelper::render("Ligne A\nLigne B");
+
+        // Un seul paragraphe, coupé par un saut — et non deux blocs séparés.
+        $this->assertSame(1, substr_count($html, '<p>'));
+        $this->assertStringContainsString('<br />', $html);
+    }
+
+    public function test_un_titre_n_est_pas_suivi_d_un_saut(): void
+    {
+        $html = MarkdownHelper::render("# Titre\n\nDu texte.");
+
+        $this->assertStringNotContainsString('</h1><br />', $html);
+        $this->assertStringNotContainsString("</h1>\n<br />", $html);
+    }
+
+    /** Un lien `javascript:` rédigé en markdown ne doit pas survivre au rendu. */
+    public function test_les_liens_dangereux_sont_neutralises(): void
+    {
+        $html = MarkdownHelper::render('[cliquez](javascript:alert(1))');
+
+        $this->assertStringNotContainsString('javascript:', $html);
+    }
+
+    public function test_une_valeur_nulle_ne_leve_pas_d_erreur(): void
+    {
+        $this->assertSame('', MarkdownHelper::render(null));
+    }
+
     public function test_une_chaine_vide_ne_leve_pas_d_erreur(): void
     {
         $this->assertSame('', trim(strip_tags(MarkdownHelper::render(''))));
