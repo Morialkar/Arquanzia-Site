@@ -114,13 +114,14 @@ jobs:
           #
           # On interroge le nom public depuis le serveur, et non 127.0.0.1 : le vhost n'écoute
           # pas sur la boucle locale, qui renvoie 404 même quand le site est parfaitement sain.
-          # Vérifié directement sur la machine avant d'écrire ceci.
+          #
+          # En HTTPS : le contrôle valide ainsi le certificat en même temps que le site.
           #
           # En passant par la boucle locale avec l'en-tête Host, on teste exactement ce qui
           # vient d'être déployé. À rebasculer sur une adresse publique une fois le DNS migré.
           ssh cible "for tentative in 1 2 3 4 5; do
             code=\$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
-              http://arquanzia.site/healthz || echo 000)
+              https://arquanzia.site/healthz || echo 000)
             echo \"Tentative \$tentative → HTTP \$code\"
             [ \"\$code\" = '200' ] && exit 0
             sleep 8
