@@ -2,4 +2,8 @@ User-agent: *
 Disallow: /admin/
 Disallow: /api/
 
+# Le flux canonique est ouvert ; ses variantes paramétrées formeraient un espace
+# d'URL sans fin, sans intérêt pour un index.
+Disallow: /flux.xml?
+
 Sitemap: https://arquanzia.site/sitemap.xml

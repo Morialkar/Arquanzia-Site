@@ -19,6 +19,8 @@
     <title>{{ $title }}</title>
     <meta name="description" content="{{ $resolvedDescription }}">
     <link rel="canonical" href="{{ url()->current() }}">
+    {{-- Découverte automatique : les lecteurs de flux proposent l'abonnement dès la page d'accueil. --}}
+    <link rel="alternate" type="application/atom+xml" title="Parutions d’Arquanzia" href="{{ route('feeds.atom') }}">
 
     <meta property="og:title" content="{{ $title }}">
     <meta property="og:description" content="{{ $resolvedDescription }}">

@@ -41,6 +41,14 @@ Route::get('/fragments', [\App\Http\Controllers\FragmentController::class, 'inde
 Route::get('/fragments/{path}', [\App\Http\Controllers\FragmentController::class, 'show'])
     ->where('path', '.*')->name('fragments.show');
 
+// Flux de syndication : suivre les parutions sans aucune inscription.
+// La limite de débit est plus haute qu'ailleurs — un lecteur RSS interroge par nature de
+// façon répétée — mais elle existe, chaque combinaison de paramètres étant une URL distincte.
+Route::get('/flux', [\App\Http\Controllers\SyndicationController::class, 'builder'])->name('feeds.builder');
+Route::get('/flux.xml', [\App\Http\Controllers\SyndicationController::class, 'atom'])
+    ->middleware('throttle:120,1')
+    ->name('feeds.atom');
+
 // La recherche déclenche trois LIKE %…% sans index utilisable : elle est la surface
 // publique la plus facile à saturer. L'API, appelée à la frappe, tolère plus d'appels.
 Route::get('/recherche', [\App\Http\Controllers\SearchController::class, 'search'])
