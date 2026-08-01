@@ -149,55 +149,5 @@
         {{ $slot }}
     </main>
 
-    <script nonce="{{ csp_nonce() }}">
-        // Admin theme toggle - uses same preference as public site
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const html = document.documentElement;
-        const mobileNavToggle = document.getElementById('admin-nav-toggle');
-        const mobileNav = document.getElementById('admin-mobile-nav');
-
-        function applyTheme(theme) {
-            if (theme === 'dark') {
-                html.classList.add('dark');
-                themeIcon.textContent = '☀️';
-            } else {
-                html.classList.remove('dark');
-                themeIcon.textContent = '🌙';
-            }
-        }
-
-        // Load saved theme or default to system preference
-        const savedTheme = localStorage.getItem('theme_pref') || 'system';
-        const effectiveTheme = savedTheme === 'system' 
-            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-            : savedTheme;
-        applyTheme(effectiveTheme);
-
-        themeToggle?.addEventListener('click', () => {
-            const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme_pref', newTheme);
-            applyTheme(newTheme);
-        });
-
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            const pref = localStorage.getItem('theme_pref') || 'system';
-            if (pref === 'system') {
-                const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                applyTheme(theme);
-            }
-        });
-
-        // Mobile admin nav toggle
-        if (mobileNavToggle && mobileNav) {
-            mobileNavToggle.addEventListener('click', () => {
-                const expanded = mobileNavToggle.getAttribute('aria-expanded') === 'true';
-                mobileNavToggle.setAttribute('aria-expanded', (!expanded).toString());
-                mobileNav.classList.toggle('hidden');
-            });
-        }
-    </script>
 </body>
 </html>

@@ -13,7 +13,7 @@
                 <p class="arq-dim text-sm mb-2">{{ $book->title }}</p>
                 <h1 class="font-serif text-3xl md:text-4xl font-bold text-arq-forest">{{ $chapter->title }}</h1>
                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-arq-parchment-dark">
-                    <div id="reading-progress" class="h-full bg-arq-forest transition-all duration-100" style="width: 0%"></div>
+                    <div id="reading-progress" class="h-full bg-arq-forest transition-all duration-100" ></div>
                 </div>
             </header>
 
@@ -95,56 +95,4 @@
         </div>
     </article>
 
-    <script nonce="{{ csp_nonce() }}">
-        (function() {
-            var progressBar = document.getElementById('reading-progress');
-            if (progressBar) {
-                window.addEventListener('scroll', function() {
-                    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                    var progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
-                    progressBar.style.width = Math.min(100, Math.max(0, progress)) + '%';
-                });
-            }
-
-            var chapterContent = document.getElementById('chapter-content');
-            var fontSizeValue = document.getElementById('reader-font-size-value');
-            var fontDecrease = document.getElementById('reader-font-decrease');
-            var fontIncrease = document.getElementById('reader-font-increase');
-            var dyslexicToggle = document.getElementById('reader-dyslexic-toggle');
-
-            var initialScale = parseInt(localStorage.getItem('reader_font_scale') || '100', 10);
-
-            var applyFontScale = function(scale) {
-                if (!chapterContent) return;
-                var normalized = Math.min(130, Math.max(85, scale));
-                chapterContent.style.fontSize = normalized / 100 + 'em';
-                if (fontSizeValue) fontSizeValue.textContent = normalized + '%';
-                localStorage.setItem('reader_font_scale', normalized.toString());
-            };
-
-            applyFontScale(initialScale);
-            if (fontDecrease) fontDecrease.addEventListener('click', function() {
-                applyFontScale(parseInt(localStorage.getItem('reader_font_scale') || '100', 10) - 5);
-            });
-            if (fontIncrease) fontIncrease.addEventListener('click', function() {
-                applyFontScale(parseInt(localStorage.getItem('reader_font_scale') || '100', 10) + 5);
-            });
-
-            if (dyslexicToggle && chapterContent) {
-                var isDyslexic = localStorage.getItem('reader_font_dyslexic') === '1';
-
-                var applyDyslexic = function(enabled) {
-                    chapterContent.classList.toggle('font-reader-dyslexic', enabled);
-                    dyslexicToggle.setAttribute('data-state', enabled ? 'active' : 'inactive');
-                    dyslexicToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-                    localStorage.setItem('reader_font_dyslexic', enabled ? '1' : '0');
-                };
-
-                applyDyslexic(isDyslexic);
-                dyslexicToggle.addEventListener('click', function() {
-                    applyDyslexic(dyslexicToggle.getAttribute('data-state') !== 'active');
-                });
-            }
-        })();
-    </script>
 </x-layouts.app>

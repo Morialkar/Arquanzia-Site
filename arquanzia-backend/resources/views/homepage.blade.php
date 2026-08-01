@@ -36,8 +36,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @foreach($encyclopediaNodes as $node)
                 <a href="{{ route('encyclopedia.show', $node->getFullPath()) }}"
-                   class="group block card-arq card-arq-colored overflow-hidden"
-                   style="border-left: 4px solid {{ $accentPalette[$loop->index % 5] }}">
+                   class="group block card-arq card-arq-colored overflow-hidden accent-{{ $loop->index % 5 }}">
                     <div class="aspect-video bg-arq-parchment-dark dark:bg-arq-night overflow-hidden">
                         @if($node->thumbnail_media_id)
                             <img src="{{ route('media.show', $node->thumbnail_media_id) }}"
@@ -72,8 +71,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             @foreach($books as $book)
                 <a href="{{ route('library.book', $book->slug) }}"
-                   class="group block card-arq card-arq-colored overflow-hidden"
-                   style="border-left: 4px solid {{ $accentPaletteReversed[$loop->index % 5] }}">
+                   class="group block card-arq card-arq-colored overflow-hidden accent-{{ 4 - ($loop->index % 5) }}">
                     <div class="aspect-[2/3] bg-arq-parchment-dark dark:bg-arq-night overflow-hidden">
                         @if($book->cover)
                             <img src="{{ route('media.show', $book->cover->id) }}"

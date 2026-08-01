@@ -838,3 +838,22 @@ body > *:not(.arq-bg-lights):not(header) {
     background: #1a1a1a;
     border-color: rgba(95, 254, 176, 0.15);
 }
+
+/* Accents et profondeurs — remplacent des attributs style= que la politique de sécurité de
+   contenu n'autorise plus. Les valeurs étant issues d'ensembles finis, des classes suffisent. */
+.accent-0 { border-left: 4px solid #9B6FD4; }
+.accent-1 { border-left: 4px solid #5FFEB0; }
+.accent-2 { border-left: 4px solid #40C8E0; }
+.accent-3 { border-left: 4px solid #D4709A; }
+.accent-4 { border-left: 4px solid #B87333; }
+
+/* Indentation de l'arborescence du back-office, bornée : au-delà, la profondeur cesse d'être
+   lisible et l'écran déborde. */
+.profondeur-0 { margin-left: 0; }
+.profondeur-1 { margin-left: 1.5rem; }
+.profondeur-2 { margin-left: 3rem; }
+.profondeur-3 { margin-left: 4.5rem; }
+.profondeur-4 { margin-left: 6rem; }
+.profondeur-5 { margin-left: 7.5rem; }
+
+.media-contenu { max-height: 70vh; }

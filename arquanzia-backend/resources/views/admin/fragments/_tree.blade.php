@@ -1,4 +1,4 @@
-<ul class="space-y-2" style="margin-left: {{ $level * 1.5 }}rem">
+<ul class="space-y-2 profondeur-{{ min($level, 5) }}">
     @foreach($nodes as $node)
         <li class="p-3 rounded-xl bg-white/90 dark:bg-gray-800 border border-arq-amber/10 dark:border-gray-700 shadow-sm hover:bg-white dark:hover:bg-gray-750">
             <div class="flex items-center justify-between">

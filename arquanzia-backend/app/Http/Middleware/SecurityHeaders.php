@@ -57,10 +57,9 @@ class SecurityHeaders
             // Tout est servi depuis le site lui-même depuis le rapatriement des assets.
             "default-src 'self'",
             "script-src 'self' 'nonce-{$nonce}'",
-            // Les styles restent permissifs : les attributs style= subsistent dans les
-            // gabarits, et un nonce ne les couvre pas. À resserrer une fois qu'ils auront
-            // disparu — la valeur du verrou est bien moindre que pour les scripts.
-            "style-src 'self' 'unsafe-inline'",
+            // Les derniers attributs style= ont été convertis en classes : la politique
+            // n'a plus besoin de les tolérer.
+            "style-src 'self'",
             "img-src 'self' data:",
             "font-src 'self'",
             // Le site n'appelle aucune interface distante.

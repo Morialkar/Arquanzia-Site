@@ -41,7 +41,7 @@
         @elseif($item->media_type === 'video')
             <div class="mb-6">
                 @if($item->media_id && $item->media)
-                    <video controls class="w-full rounded-lg shadow-md" style="max-height: 70vh;">
+                    <video controls class="w-full rounded-lg shadow-md media-contenu">
                         <source src="{{ route('media.show', $item->media_id) }}" type="{{ $item->media->mime }}">
                     </video>
                 @elseif($item->embed_url)

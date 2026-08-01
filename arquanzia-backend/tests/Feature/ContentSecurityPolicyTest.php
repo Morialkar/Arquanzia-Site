@@ -69,6 +69,28 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString("script-src 'self' 'nonce-", $policy);
     }
 
+    public function test_les_styles_en_ligne_ne_sont_plus_autorises(): void
+    {
+        $policy = $this->policy();
+
+        $this->assertStringContainsString("style-src 'self'", $policy);
+        $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $policy);
+    }
+
+    /** Un attribut style= serait silencieusement ignoré par le navigateur. */
+    public function test_aucun_attribut_style_ne_subsiste_dans_les_gabarits(): void
+    {
+        $fautifs = [];
+
+        foreach (glob(resource_path('views').'/{,*/,*/*/,*/*/*/}*.blade.php', GLOB_BRACE) as $file) {
+            if (str_contains(file_get_contents($file), 'style="')) {
+                $fautifs[] = str_replace(resource_path('views').'/', '', $file);
+            }
+        }
+
+        $this->assertSame([], $fautifs, 'Ces gabarits portent un style que la politique bloquerait.');
+    }
+
     /** Un nonce ne couvre pas les gestionnaires en ligne : il ne doit plus en rester. */
     public function test_aucun_gestionnaire_en_ligne_ne_subsiste_dans_les_gabarits(): void
     {

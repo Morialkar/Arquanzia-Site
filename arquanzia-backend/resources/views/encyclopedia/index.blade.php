@@ -14,8 +14,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($nodes as $node)
                 <a href="{{ route('encyclopedia.show', $node->slug) }}"
-                   class="group block card-arq card-arq-colored overflow-hidden"
-                   style="border-left: 4px solid {{ $accentPalette[$loop->index % 5] }}">
+                   class="group block card-arq card-arq-colored overflow-hidden accent-{{ $loop->index % 5 }}">
                     @if($node->isCategory())
                         <div class="aspect-video bg-arq-parchment-dark dark:bg-arq-night overflow-hidden relative">
                             @if($node->thumbnail_media_id)

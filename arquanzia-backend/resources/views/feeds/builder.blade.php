@@ -45,58 +45,11 @@
 
             <p class="block text-xs uppercase tracking-[0.2em] text-arq-bark/60 mb-2">Votre adresse de flux</p>
             <div class="flex flex-col sm:flex-row gap-2">
-                <code id="flux-url" class="flex-1 break-all rounded-organic-sm bg-arq-parchment-dark/60 px-3 py-2 text-sm">{{ route('feeds.atom') }}</code>
+                <code id="flux-url" data-flux-base="{{ route('feeds.atom') }}" class="flex-1 break-all rounded-organic-sm bg-arq-parchment-dark/60 px-3 py-2 text-sm">{{ route('feeds.atom') }}</code>
                 <button type="button" id="flux-copier" class="btn-arq btn-arq-primary shrink-0">Copier</button>
             </div>
             <p id="flux-etat" class="mt-2 text-sm text-arq-forest" role="status" aria-live="polite"></p>
         </div>
     </div>
 
-    <script nonce="{{ csp_nonce() }}">
-        (function () {
-            var base = @json(route('feeds.atom'));
-            var sortie = document.getElementById('flux-url');
-            var bouton = document.getElementById('flux-copier');
-            var etat = document.getElementById('flux-etat');
-
-            function valeurs(nom) {
-                return Array.prototype.slice
-                    .call(document.querySelectorAll('input[data-flux="' + nom + '"]:checked'))
-                    .map(function (c) { return c.value; })
-                    .sort();
-            }
-
-            function recomposer() {
-                // Le tri et l'ordre des paramètres reproduisent la forme canonique du serveur :
-                // une adresse composée ici ne déclenche donc aucune redirection.
-                var params = [];
-                var livres = valeurs('livres');
-                var sections = valeurs('sections');
-
-                if (livres.length) { params.push('livres=' + livres.join(',')); }
-                if (sections.length) { params.push('sections=' + sections.join(',')); }
-
-                sortie.textContent = params.length ? base + '?' + params.join('&') : base;
-            }
-
-            Array.prototype.forEach.call(document.querySelectorAll('input[data-flux]'), function (c) {
-                c.addEventListener('change', recomposer);
-            });
-
-            bouton.addEventListener('click', function () {
-                var texte = sortie.textContent;
-
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(texte).then(
-                        function () { etat.textContent = 'Adresse copiée.'; },
-                        function () { etat.textContent = 'Copie impossible — sélectionnez l’adresse à la main.'; }
-                    );
-                } else {
-                    etat.textContent = 'Copie impossible — sélectionnez l’adresse à la main.';
-                }
-            });
-
-            recomposer();
-        })();
-    </script>
 </x-layouts.app>

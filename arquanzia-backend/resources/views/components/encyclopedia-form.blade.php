@@ -104,7 +104,7 @@
         </div>
     @endif
 
-    <div id="article-fields" class="space-y-6 border-t border-gray-200 dark:border-white/10 pt-6" style="{{ $node && $node->isCategory() ? 'display: none;' : '' }}">
+    <div id="article-fields" class="space-y-6 border-t border-gray-200 dark:border-white/10 pt-6 @if($node && $node->isCategory()) hidden @endif">
         <h3 class="font-medium text-arq-ink dark:text-white">Contenu article</h3>
         
         <div>
@@ -178,10 +178,4 @@
 </form>
 
 @if(!$node)
-    <script nonce="{{ csp_nonce() }}">
-        document.querySelector('select[name="type"]').addEventListener('change', function() {
-            document.getElementById('article-fields').style.display = this.value === 'article' ? 'block' : 'none';
-        });
-        document.querySelector('select[name="type"]').dispatchEvent(new Event('change'));
-    </script>
 @endif
