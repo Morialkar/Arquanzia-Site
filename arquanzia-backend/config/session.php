@@ -171,9 +171,13 @@ return [
     |
     */
 
-    // Sans valeur, le drapeau restait indéfini et le cookie de session pouvait voyager en
-    // clair. Il est exigé en production, et laissé libre ailleurs pour le développement local.
-    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
+    // Laissé sans valeur à dessein : Laravel aligne alors le drapeau sur le schéma de la
+    // requête — posé en HTTPS, omis en HTTP. Le forcer à true en production paraissait plus
+    // sûr, mais rendait toute session impossible dès que le site répondait en clair, ce qui
+    // bloquait l'accès au back-office. Le comportement adaptatif se sécurise de lui-même dès
+    // qu'un certificat est en place ; y mettre true explicitement une fois le TLS acquis
+    // reste la position la plus stricte.
+    'secure' => env('SESSION_SECURE_COOKIE'),
 
     /*
     |--------------------------------------------------------------------------

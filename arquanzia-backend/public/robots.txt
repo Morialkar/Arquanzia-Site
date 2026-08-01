@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://arquanzia.com/sitemap.xml
+Sitemap: https://arquanzia.site/sitemap.xml

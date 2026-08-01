@@ -107,16 +107,16 @@ jobs:
         run: |
           # La vérification se fait DEPUIS le serveur, pas depuis Internet.
           #
-          # Le déploiement vise le serveur atteint en SSH, tandis que le DNS public de
-          # arquanzia.com pointe encore vers l'ancien hébergement : une vérification externe
-          # interrogeait donc une machine que ce workflow ne déploie pas, et rapportait une
-          # 404 parfaitement exacte mais sans rapport avec le déploiement.
+          # Le domaine arquanzia.com a expiré et le site est servi depuis arquanzia.site,
+          # dont la propagation DNS est encore partielle. Vérifier depuis la boucle locale du
+          # serveur évite d'attendre cette propagation et teste exactement ce qui vient
+          # d'être déployé, quel que soit le nom de domaine qui y mène.
           #
           # En passant par la boucle locale avec l'en-tête Host, on teste exactement ce qui
           # vient d'être déployé. À rebasculer sur une adresse publique une fois le DNS migré.
           ssh cible "for tentative in 1 2 3 4 5; do
             code=\$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
-              -H 'Host: arquanzia.com' http://127.0.0.1/healthz || echo 000)
+              -H 'Host: arquanzia.site' http://127.0.0.1/healthz || echo 000)
             echo \"Tentative \$tentative → HTTP \$code\"
             [ \"\$code\" = '200' ] && exit 0
             sleep 8

@@ -18,12 +18,11 @@ Dans **Settings → Secrets and variables → Actions** du dépôt :
 | Secret | Contenu | Exemple |
 |---|---|---|
 | `DEPLOY_SSH_KEY` | Clé privée SSH **dédiée au déploiement**, au format OpenSSH, en entier | `-----BEGIN OPENSSH PRIVATE KEY-----…` |
-| `DEPLOY_KNOWN_HOSTS` | Empreinte du serveur, pour ne pas accepter n'importe quel hôte | sortie de `ssh-keyscan arquanzia.com` |
-| `DEPLOY_HOST` | Hôte du serveur | `arquanzia.com` |
+| `DEPLOY_KNOWN_HOSTS` | Empreinte du serveur, pour ne pas accepter n'importe quel hôte | sortie de `ssh-keyscan <hôte>` |
+| `DEPLOY_HOST` | Hôte **SSH** du serveur — pas forcément le domaine du site | l'hôte de connexion |
 | `DEPLOY_USER` | Utilisateur SSH | l'utilisateur cPanel |
-| `DEPLOY_PATH` | Chemin distant du site | `arquanzia.com` |
+| `DEPLOY_PATH` | Dossier distant du site | le dossier sur le serveur |
 | `DEPLOY_PHP_BIN` | Binaire PHP du serveur | `/opt/alt/php84/usr/bin/php` |
-| `DEPLOY_HEALTH_URL` | URL vérifiée après déploiement | `https://arquanzia.com/healthz` |
 | `DEPLOY_PORT` | Port SSH, **facultatif** — vaut 22 par défaut | `22` |
 
 ### Générer la clé de déploiement
@@ -43,7 +42,7 @@ ssh-copy-id -i ~/.ssh/arquanzia_deploy.pub arquanzia
 Pour `DEPLOY_KNOWN_HOSTS` :
 
 ```bash
-ssh-keyscan arquanzia.com
+ssh-keyscan <hôte>
 ```
 
 ## Ce que le déploiement fait sur le serveur
