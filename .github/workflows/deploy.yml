@@ -88,6 +88,13 @@ jobs:
           ssh cible \
             "set -e
              cd '$REMOTE_DIR'
+
+             # Impératif AVANT composer : les caches de découverte listent les service
+             # providers des paquets installés. Quand un paquet disparaît du composer.lock,
+             # Laravel tente quand même de charger le sien pendant la désinstallation, ne le
+             # trouve plus, et interrompt tout. Ces fichiers sont tous régénérés plus bas.
+             rm -f bootstrap/cache/*.php
+
              '$PHP_BIN' \$(which composer) install --no-dev --optimize-autoloader --no-interaction
              '$PHP_BIN' artisan migrate --force
              '$PHP_BIN' artisan view:clear
