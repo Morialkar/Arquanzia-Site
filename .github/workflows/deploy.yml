@@ -107,16 +107,20 @@ jobs:
         run: |
           # La vérification se fait DEPUIS le serveur, pas depuis Internet.
           #
-          # Le domaine arquanzia.com a expiré et le site est servi depuis arquanzia.site,
-          # dont la propagation DNS est encore partielle. Vérifier depuis la boucle locale du
-          # serveur évite d'attendre cette propagation et teste exactement ce qui vient
-          # d'être déployé, quel que soit le nom de domaine qui y mène.
+          # La vérification part DU serveur, pas d'Internet : le domaine arquanzia.com a
+          # expiré, le site est servi depuis arquanzia.site, et la propagation DNS reste
+          # partielle — un contrôle externe testerait une résolution encore instable plutôt
+          # que le déploiement lui-même.
+          #
+          # On interroge le nom public depuis le serveur, et non 127.0.0.1 : le vhost n'écoute
+          # pas sur la boucle locale, qui renvoie 404 même quand le site est parfaitement sain.
+          # Vérifié directement sur la machine avant d'écrire ceci.
           #
           # En passant par la boucle locale avec l'en-tête Host, on teste exactement ce qui
           # vient d'être déployé. À rebasculer sur une adresse publique une fois le DNS migré.
           ssh cible "for tentative in 1 2 3 4 5; do
             code=\$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
-              -H 'Host: arquanzia.site' http://127.0.0.1/healthz || echo 000)
+              http://arquanzia.site/healthz || echo 000)
             echo \"Tentative \$tentative → HTTP \$code\"
             [ \"\$code\" = '200' ] && exit 0
             sleep 8
