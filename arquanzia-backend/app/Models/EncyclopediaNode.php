@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTreePath;
+use App\Models\Concerns\TracksRevisions;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EncyclopediaNode extends Model
 {
-    use HasFactory, HasTreePath, HasUuids;
+    use HasFactory, HasTreePath, HasUuids, TracksRevisions;
 
     protected $fillable = [
         'parent_id',
@@ -70,6 +71,12 @@ class EncyclopediaNode extends Model
     public function mentions(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Mention::class, 'source');
+    }
+
+    /** Le corps de l'article vit à part : sa modification passe par markRevised(). */
+    public function revisableFields(): array
+    {
+        return ['title', 'teaser_md'];
     }
 
     protected static function booted(): void

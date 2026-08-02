@@ -35,8 +35,16 @@ class AppServiceProvider extends ServiceProvider
         // Le corps d'un article vit dans une table à part : le modifier doit réindexer son
         // nœud, seul porteur d'une adresse et donc seule source utile.
         EncyclopediaArticle::saved(function (EncyclopediaArticle $article) {
-            if ($node = EncyclopediaNode::find($article->node_id)) {
-                app(MentionIndexer::class)->index($node);
+            if (! $node = EncyclopediaNode::find($article->node_id)) {
+                return;
+            }
+
+            app(MentionIndexer::class)->index($node);
+
+            // Le corps de l'article est le texte que lisent les visiteurs : le modifier est
+            // une révision de l'entrée, même si le nœud lui-même n'a pas bougé.
+            if ($article->wasChanged('content_md')) {
+                $node->markRevised();
             }
         });
     }

@@ -47,6 +47,9 @@ Route::get('/fragments', [\App\Http\Controllers\FragmentController::class, 'inde
 Route::get('/fragments/{path}', [\App\Http\Controllers\FragmentController::class, 'show'])
     ->where('path', '.*')->name('fragments.show');
 
+// Ce qui a été retravaillé : le flux annonce les parutions, pas les reprises.
+Route::get('/revisions', [\App\Http\Controllers\RevisionsController::class, 'index'])->name('revisions');
+
 // Flux de syndication : suivre les parutions sans aucune inscription.
 // La limite de débit est plus haute qu'ailleurs — un lecteur RSS interroge par nature de
 // façon répétée — mais elle existe, chaque combinaison de paramètres étant une URL distincte.

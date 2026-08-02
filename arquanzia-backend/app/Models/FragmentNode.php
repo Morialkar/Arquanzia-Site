@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Helpers\MarkdownHelper;
 use App\Models\Concerns\HasTreePath;
+use App\Models\Concerns\TracksRevisions;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class FragmentNode extends Model
 {
-    use HasFactory, HasTreePath, HasUuids;
+    use HasFactory, HasTreePath, HasUuids, TracksRevisions;
 
     protected $fillable = [
         'parent_id',
@@ -33,6 +34,11 @@ class FragmentNode extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(FragmentNode::class, 'parent_id');
+    }
+
+    public function revisableFields(): array
+    {
+        return ['title', 'description_md'];
     }
 
     protected static function booted(): void

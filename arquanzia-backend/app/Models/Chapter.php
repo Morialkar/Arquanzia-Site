@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TracksRevisions;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Chapter extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, TracksRevisions;
 
     protected $fillable = [
         'book_id',
@@ -56,6 +57,12 @@ class Chapter extends Model
     public function mentions(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Mention::class, 'source');
+    }
+
+    /** Seule une modification du texte compte comme révision. */
+    public function revisableFields(): array
+    {
+        return ['title', 'content_md'];
     }
 
     protected static function booted(): void

@@ -148,6 +148,11 @@
     <footer class="mt-16 py-8 text-center">
         <div class="separator-organic max-w-xs mx-auto mb-6"></div>
         <p class="text-arq-forest/60 text-sm font-serif">© {{ date('Y') }} Créations Sortilege</p>
+            <p class="mt-2 text-sm">
+                <a href="{{ route('revisions') }}" class="text-arq-forest/70 dark:text-arq-mint/60 hover:underline">Révisions récentes</a>
+                <span class="text-arq-forest/40 dark:text-arq-mint/30 mx-2">·</span>
+                <a href="{{ route('feeds.builder') }}" class="text-arq-forest/70 dark:text-arq-mint/60 hover:underline">Suivre les parutions</a>
+            </p>
     </footer>
 
 
