@@ -1,5 +1,6 @@
 import './bootstrap';
 
+import initAncres from './ancres';
 import initBascule from './bascule';
 import initConfirmation from './confirmation';
 import initCompositeurFlux from './compositeur-flux';
@@ -20,6 +21,7 @@ function demarrer() {
     initConfirmation();
     initSlugAlerte();
     initBascule();
+    initAncres();
     initTheme();
     initMenuMobile();
     initRecherche();

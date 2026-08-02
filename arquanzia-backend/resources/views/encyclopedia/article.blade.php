@@ -45,7 +45,7 @@
 
                 <div class="flex-1">
                     <div class="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-arq-forest prose-p:text-arq-ink prose-p:leading-relaxed">
-                        {!! $node->article?->content_html !!}
+                        {!! \App\Support\ParagraphAnchors::apply($node->article?->content_html) !!}
                     </div>
                 </div>
             </div>

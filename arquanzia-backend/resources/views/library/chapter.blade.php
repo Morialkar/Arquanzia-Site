@@ -49,7 +49,7 @@
             </section>
 
             <div id="chapter-content" class="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-arq-forest prose-p:text-arq-ink prose-p:leading-relaxed prose-a:text-arq-forest prose-a:no-underline hover:prose-a:underline transition-[font-size] duration-150 ease-out">
-                {!! $chapter->content_md ? \App\Helpers\MarkdownHelper::render($chapter->content_md) : '' !!}
+                {!! \App\Support\ParagraphAnchors::apply(\App\Helpers\MarkdownHelper::render($chapter->content_md)) !!}
             </div>
 
             <footer class="mt-12 pt-6 border-t border-arq-amber/20">

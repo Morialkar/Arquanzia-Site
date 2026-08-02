@@ -858,6 +858,46 @@ body > *:not(.arq-bg-lights):not(header) {
 
 .media-contenu { max-height: 70vh; }
 
+/* Ancres de paragraphe — un passage précis peut être cité par son adresse. */
+.paragraph-anchor {
+    margin-left: 0.4em;
+    opacity: 0;
+    text-decoration: none;
+    color: var(--color-arq-copper);
+    font-size: 0.85em;
+    transition: opacity 0.15s ease;
+}
+
+/* Discrète par défaut : elle ne doit pas parasiter la lecture. */
+p:hover > .paragraph-anchor,
+.paragraph-anchor:focus-visible {
+    opacity: 0.6;
+}
+
+.paragraph-anchor:hover {
+    opacity: 1;
+}
+
+/* Retour de copie porté par un attribut, sans injecter de texte dans le paragraphe : celui-ci
+   servant à calculer l'empreinte, y ajouter du contenu changerait son identifiant. */
+.paragraph-anchor[data-copie]::after {
+    content: ' copié';
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.paragraph-anchor[data-copie] {
+    opacity: 1;
+}
+
+/* Le paragraphe visé par l'adresse se signale à l'arrivée. */
+p:target {
+    background: color-mix(in srgb, var(--color-arq-amber) 22%, transparent);
+    border-radius: 0.25rem;
+    box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--color-arq-amber) 22%, transparent);
+    scroll-margin-top: 6rem;
+}
+
 /* ------------------------------------------------------------------
    Impression
    ------------------------------------------------------------------
