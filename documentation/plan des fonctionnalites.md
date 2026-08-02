@@ -23,7 +23,8 @@ L'ordre suit le rapport effet/effort croissant en risque, chaque lot étant livr
 1. **F1 — Temps de lecture** : socle de calcul réutilisé par F2 et F3, aucun changement de schéma.
 2. **F4 — Au hasard** : une heure, aucune dépendance, gain immédiat d'exploration.
 3. **F3 — Liens vers un paragraphe** : touche le rendu Markdown, donc à faire avant F2 qui s'y greffe.
-4. **F2 — Commentaire d'autrice** : le plus différenciant, mais demande une écriture d'interface.
+4. **F2 — Commentaire d'autrice** : le plus différenciant. Notes ancrées, donc **strictement
+   après F3**, dont il consomme les identifiants de paragraphe.
 5. **F5 — Signalement de coquille** : dernier car il ouvre une surface d'envoi, à border.
 
 ---
@@ -76,14 +77,25 @@ Masquées par défaut : le texte reste premier, la note est un bonus assumé.
 
 ### Mise en œuvre
 
-- Deux formes possibles, à trancher **avant de coder** :
-  - **note unique par texte** — une colonne `author_note_md`, un champ dans l'admin, un encart
-    en fin de lecture. Simple, suffisant pour commencer ;
-  - **notes en marge ancrées** — une table `author_notes` liée à un paragraphe. Beaucoup plus
-    riche, mais dépend de F3 pour l'ancrage et complique la rédaction.
-- **Recommandation : commencer par la note unique.** Elle se livre en une journée, et si
-  l'usage prend, les notes ancrées deviennent une évolution naturelle plutôt qu'un pari.
-- Rendu par `MarkdownHelper`, donc les wikilinks y fonctionnent.
+**Forme retenue : notes ancrées à un paragraphe.** Décision de Naomi, contre ma recommandation
+initiale d'une note unique par texte. Sa raison est décisive et tranche aussi la granularité :
+elle n'aura que rarement besoin de commenter plus fin qu'un paragraphe, et l'ancrage facilite
+l'association entre la note et ce qu'elle a écrit.
+
+**F3 devient donc un prérequis** — les notes s'accrochent aux identifiants de paragraphe qu'il
+produit. C'est ce qui fixe l'ordre : F3 avant F2, sans exception.
+
+- Table `author_notes` : `commentable_type`, `commentable_id`, `paragraph_id`, `note_md`,
+  `position`. Le morphisme couvre chapitres et articles d'un coup.
+- **La note survit à la réécriture du paragraphe**, ou elle ne survit pas — à trancher. Les
+  identifiants de F3 dérivent du contenu : réécrire un paragraphe change son identifiant et
+  orpheline sa note. Deux options :
+  - conserver la note orpheline et la signaler dans l'admin (« ce paragraphe a changé ») ;
+  - la rattacher au paragraphe le plus proche par similarité.
+  **Recommandation : la première.** Une note mal rattachée est pire qu'une note signalée comme
+  détachée, et l'admin est seule à voir l'avertissement.
+- Rédaction : dans l'écran d'édition, chaque paragraphe rendu porte un bouton « annoter ».
+- Rendu par `MarkdownHelper`, donc les wikilinks fonctionnent dans les notes.
 
 ### Pièges
 
@@ -96,8 +108,9 @@ Masquées par défaut : le texte reste premier, la note est un bonus assumé.
 
 ### Tests
 
-Un texte sans note n'affiche pas le bouton ; une note s'affiche et rend son Markdown ; la note
-n'apparaît ni dans le flux ni dans la recherche.
+Un texte sans note n'affiche rien ; une note s'affiche au bon paragraphe et rend son Markdown ;
+la note n'apparaît ni dans le flux ni dans la recherche ; réécrire un paragraphe annoté laisse
+la note détachée et signalée, sans la perdre ; supprimer un texte supprime ses notes.
 
 ---
 
