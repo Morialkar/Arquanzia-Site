@@ -58,6 +58,71 @@ class AdminChapterWriteTest extends TestCase
         $this->assertTrue($chapter->fresh()->is_published);
     }
 
+    /**
+     * Le formulaire annonce « Laisser vide = immédiat » ; le contrôleur enregistrait la saisie
+     * telle quelle, donc NULL, et tout ce qui classe par date de parution s'en trouvait faussé.
+     */
+    public function test_publier_sans_date_date_le_chapitre_de_maintenant(): void
+    {
+        $book = Book::factory()->create();
+        $chapter = Chapter::factory()->for($book)->draft()->create();
+
+        $this->actingAsAdmin()
+            ->put(route('admin.chapters.update', [$book, $chapter], false), [
+                'title' => $chapter->title,
+                'slug' => $chapter->slug,
+                'order_index' => $chapter->order_index,
+                'content_md' => $chapter->content_md,
+                'is_published' => '1',
+                'published_at' => '',
+            ])
+            ->assertRedirect(route('admin.books.edit', $book));
+
+        $this->assertNotNull($chapter->fresh()->published_at);
+    }
+
+    public function test_un_brouillon_garde_une_date_de_parution_vide(): void
+    {
+        $book = Book::factory()->create();
+        $chapter = Chapter::factory()->for($book)->draft()->create(['published_at' => null]);
+
+        $this->actingAsAdmin()
+            ->put(route('admin.chapters.update', [$book, $chapter], false), [
+                'title' => $chapter->title,
+                'slug' => $chapter->slug,
+                'order_index' => $chapter->order_index,
+                'content_md' => 'Encore en travail.',
+                'published_at' => '',
+            ])
+            ->assertRedirect(route('admin.books.edit', $book));
+
+        $this->assertNull($chapter->fresh()->published_at);
+    }
+
+    /** Rééditer un chapitre déjà paru ne doit pas déplacer sa date de parution. */
+    public function test_reediter_un_chapitre_publie_conserve_sa_date(): void
+    {
+        $book = Book::factory()->create();
+        $parution = now()->subYear()->startOfMinute();
+        $chapter = Chapter::factory()->for($book)->create([
+            'is_published' => true,
+            'published_at' => $parution,
+        ]);
+
+        $this->actingAsAdmin()
+            ->put(route('admin.chapters.update', [$book, $chapter], false), [
+                'title' => $chapter->title,
+                'slug' => $chapter->slug,
+                'order_index' => $chapter->order_index,
+                'content_md' => 'Une coquille corrigée.',
+                'is_published' => '1',
+                'published_at' => '',
+            ])
+            ->assertRedirect(route('admin.books.edit', $book));
+
+        $this->assertTrue($parution->equalTo($chapter->fresh()->published_at));
+    }
+
     public function test_creer_un_chapitre_fonctionne(): void
     {
         $book = Book::factory()->create();

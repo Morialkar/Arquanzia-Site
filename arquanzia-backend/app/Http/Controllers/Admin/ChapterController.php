@@ -32,17 +32,42 @@ class ChapterController extends Controller
 
         $slug = $request->input('slug') ?: Str::slug($request->input('title'));
 
+        $publie = $request->boolean('is_published');
+
         Chapter::create([
             'book_id' => $book->id,
             'title' => $request->input('title'),
             'slug' => $slug,
             'order_index' => $request->input('order_index'),
             'content_md' => $request->input('content_md'),
-            'is_published' => $request->boolean('is_published'),
-            'published_at' => $request->input('published_at'),
+            'is_published' => $publie,
+            'published_at' => self::dateDeParution($request->input('published_at'), $publie),
         ]);
 
         return redirect()->route('admin.books.edit', $book)->with('success', 'Chapitre créé');
+    }
+
+    /**
+     * Applique la promesse du formulaire : « Laisser vide = immédiat ».
+     *
+     * Le champ était enregistré tel quel, donc vide, donc NULL. Rien ne le montrait sur la
+     * fiche du chapitre, mais tout ce qui classe par date de parution s'en trouvait faussé :
+     * MySQL range les NULL en dernier, si bien qu'un chapitre publié le jour même passait
+     * derrière de vieux chapitres datés, sur la page d'accueil comme dans le flux Atom.
+     *
+     * Un brouillon garde une date vide : il ne paraît pas encore.
+     */
+    private static function dateDeParution(?string $saisie, bool $publie, ?\Illuminate\Support\Carbon $actuelle = null): ?\Illuminate\Support\Carbon
+    {
+        if ($saisie) {
+            return \Illuminate\Support\Carbon::parse($saisie);
+        }
+
+        if (! $publie) {
+            return null;
+        }
+
+        return $actuelle ?? now();
     }
 
     public function edit(Book $book, Chapter $chapter): View
@@ -64,7 +89,11 @@ class ChapterController extends Controller
         $slug = $request->input('slug') ?: Str::slug($request->input('title'));
 
         $nowPublished = $request->boolean('is_published');
-        $publishedAt = $request->input('published_at');
+        $publishedAt = self::dateDeParution(
+            $request->input('published_at'),
+            $nowPublished,
+            $chapter->published_at,
+        );
 
         $chapter->update([
             'title' => $request->input('title'),

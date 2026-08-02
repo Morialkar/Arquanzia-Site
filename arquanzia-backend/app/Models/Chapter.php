@@ -59,6 +59,25 @@ class Chapter extends Model
         return $this->morphMany(Mention::class, 'source');
     }
 
+    /**
+     * Moment où le chapitre est apparu ou a changé pour la dernière fois.
+     *
+     * `published_at` est saisi à la main dans le formulaire : un chapitre publié sans y toucher
+     * le laisse vide, et MySQL range les NULL en dernier — la parution du jour se retrouvait
+     * alors derrière de vieux chapitres datés. Le repli sur la création, et la prise en compte
+     * des révisions, donnent un classement qui suit le travail réel.
+     *
+     * Le calcul se fait en PHP, pas en SQL : `GREATEST` existe sous MySQL mais pas sous SQLite,
+     * où la suite de tests tourne. Deux régressions sont déjà passées par cette divergence.
+     */
+    public function lastTouchedAt(): \Illuminate\Support\Carbon
+    {
+        return collect([$this->published_at, $this->revised_at, $this->created_at])
+            ->filter()
+            ->sort()
+            ->last();
+    }
+
     /** Seule une modification du texte compte comme révision. */
     public function revisableFields(): array
     {

@@ -65,7 +65,10 @@ class FeedBuilder
         }
 
         return $query
-            ->orderByDesc('published_at')
+            // COALESCE plutôt qu'un simple tri sur published_at : la colonne a pu rester vide
+            // sur d'anciens chapitres, et MySQL range alors ces parutions en dernier. La
+            // fonction est standard, elle se comporte pareil sous SQLite et sous MySQL.
+            ->orderByRaw('COALESCE(published_at, created_at) DESC')
             ->orderByDesc('created_at')
             ->limit(self::MAX_ENTRIES)
             ->get()

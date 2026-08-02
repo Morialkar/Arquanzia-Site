@@ -1,5 +1,43 @@
 <x-layouts.app title="Arquanzia">
-    {{-- Section A : Dernier chapitre --}}
+    {{-- Les accents de couleur servent à deux sections ; les définir dans la première rendait
+         la seconde tributaire de son affichage — une page sans article d'encyclopédie publié
+         plantait sur une variable indéfinie. --}}
+    @php $accentPalette = ['#9B6FD4', '#40C8E0', '#5FFEB0', '#D4709A', '#B87333']; @endphp
+
+    {{-- Section A : Dernière chronique --}}
+    @if($latestPost)
+    <section class="mb-12">
+        <h2 class="font-serif text-2xl font-bold text-arq-forest mb-1">Dernière chronique</h2>
+        <div class="divider-elven mb-5 max-w-xs">❧</div>
+        <a href="{{ route('post.show', $latestPost) }}" class="group block card-arq overflow-hidden">
+            @if($latestPost->media->isNotEmpty())
+                <div class="aspect-video overflow-hidden bg-arq-parchment-dark">
+                    <img src="{{ route('media.show', $latestPost->media->first()->id) }}"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="">
+                </div>
+            @endif
+            <div class="p-6">
+                <p class="arq-dim text-xs uppercase tracking-widest mb-2">{{ $latestPost->created_at->diffForHumans() }}</p>
+                <h3 class="font-serif text-xl font-bold text-arq-forest group-hover:text-arq-forest-light">{{ $latestPost->title ?: 'Sans titre' }}</h3>
+                @php
+                    // Le texte d'aperçu est écrit pour annoncer le billet ; à défaut, on prend le
+                    // début du corps, débarrassé de sa syntaxe pour ne pas afficher de balisage brut.
+                    $apercu = $latestPost->preview_text
+                        ?: Str::limit(trim(preg_replace('/\s+/u', ' ', strip_tags($latestPost->content_full ?? '')) ?? ''), 220, ' …');
+                @endphp
+                @if($apercu !== '')
+                    <p class="arq-body mt-3 leading-relaxed">{{ $apercu }}</p>
+                @endif
+                <p class="arq-dim text-sm mt-3 inline-flex items-center gap-1">
+                    Lire la chronique
+                    <span aria-hidden="true">→</span>
+                </p>
+            </div>
+        </a>
+    </section>
+    @endif
+
+    {{-- Section B : Dernier chapitre --}}
     @if($latestChapter)
     <section class="mb-12">
         <h2 class="font-serif text-2xl font-bold text-arq-forest mb-1">Dernière parution</h2>
@@ -24,7 +62,7 @@
     </section>
     @endif
 
-    {{-- Section B : Les Archives (encyclopédie) --}}
+    {{-- Section C : Les Archives (encyclopédie) --}}
     @if($encyclopediaNodes->isNotEmpty())
     <section class="mb-12">
         <div class="flex items-baseline justify-between mb-1">
@@ -32,7 +70,6 @@
             <a href="{{ route('encyclopedia.index') }}" class="text-arq-forest/60 text-sm hover:underline">Tout voir →</a>
         </div>
         <div class="divider-elven mb-5 max-w-xs">❧</div>
-        @php $accentPalette = ['#9B6FD4', '#40C8E0', '#5FFEB0', '#D4709A', '#B87333']; @endphp
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @foreach($encyclopediaNodes as $node)
                 <a href="{{ route('encyclopedia.show', $node->getFullPath()) }}"
@@ -59,7 +96,7 @@
     </section>
     @endif
 
-    {{-- Section C : La Bibliothèque --}}
+    {{-- Section D : La Bibliothèque --}}
     @if($books->isNotEmpty())
     <section class="mb-12">
         <div class="flex items-baseline justify-between mb-1">
@@ -86,7 +123,7 @@
     </section>
     @endif
 
-    {{-- Section D : Fragments (conditionnel) --}}
+    {{-- Section E : Fragments (conditionnel) --}}
     @if($fragmentItems->isNotEmpty())
     <section class="mb-12">
         <div class="flex items-baseline justify-between mb-1">
@@ -109,7 +146,7 @@
     @endif
 
     {{-- Page vide --}}
-    @if($books->isEmpty() && $encyclopediaNodes->isEmpty() && !$latestChapter)
+    @if($books->isEmpty() && $encyclopediaNodes->isEmpty() && !$latestChapter && !$latestPost)
     <div class="text-center py-20">
         <h1 class="font-serif text-4xl md:text-5xl font-bold text-arq-forest italic mb-4">Arquanzia</h1>
         <p class="arq-body font-serif text-lg italic max-w-xl mx-auto leading-relaxed">

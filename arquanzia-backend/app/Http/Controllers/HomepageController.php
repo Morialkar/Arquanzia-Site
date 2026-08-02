@@ -6,18 +6,25 @@ use App\Models\Book;
 use App\Models\Chapter;
 use App\Models\EncyclopediaNode;
 use App\Models\FragmentNode;
+use App\Models\Post;
 use Illuminate\View\View;
 
 class HomepageController extends Controller
 {
     public function index(): View
     {
+        // Le fil est la seule surface qui bouge entre deux chapitres : sans lui, la porte
+        // d'entrée donnait l'impression d'un site arrêté.
+        $latestPost = Post::with('media')->latest()->first();
+
+        // Le livre doit être publié lui aussi : sinon la page d'accueil menait vers un chapitre
+        // dont la fiche répond 404.
         $latestChapter = Chapter::where('is_published', true)
-            ->where(function ($q) {
-                $q->whereNull('published_at')->orWhere('published_at', '<=', now());
-            })
+            ->whereHas('book', fn ($q) => $q->published())
             ->with('book:id,slug,title,cover_media_id')
-            ->latest('published_at')
+            ->get()
+            ->reject(fn (Chapter $chapitre) => $chapitre->isComingSoon())
+            ->sortByDesc(fn (Chapter $chapitre) => $chapitre->lastTouchedAt())
             ->first();
 
         $encyclopediaNodes = EncyclopediaNode::published()
@@ -40,6 +47,6 @@ class HomepageController extends Controller
             $fragmentItems = collect();
         }
 
-        return view('homepage', compact('latestChapter', 'encyclopediaNodes', 'books', 'fragmentItems'));
+        return view('homepage', compact('latestPost', 'latestChapter', 'encyclopediaNodes', 'books', 'fragmentItems'));
     }
 }
