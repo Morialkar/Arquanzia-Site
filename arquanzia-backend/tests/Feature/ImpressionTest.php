@@ -78,10 +78,11 @@ class ImpressionTest extends TestCase
     {
         $css = $this->feuilleConstruite();
 
-        preg_match('/p:target\{[^}]*scroll-margin-top:\s*([\d.]+)rem/', $css, $m);
-
-        $this->assertNotEmpty($m, 'p:target doit poser une marge de défilement.');
-        $this->assertGreaterThanOrEqual(10, (float) $m[1], 'La marge doit dégager les en-têtes collants.');
+        $this->assertMatchesRegularExpression(
+            '/p:target\{[^}]*scroll-margin-top:\s*calc\(var\(--arq-decalage-collant/',
+            $css,
+            'La marge doit être calculée depuis la hauteur mesurée des en-têtes, non figée.',
+        );
     }
 
     /** Sans ce repère, la règle d'impression n'atteindrait pas les réglages de lecture. */

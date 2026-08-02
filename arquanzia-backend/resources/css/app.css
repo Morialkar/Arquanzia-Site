@@ -896,10 +896,11 @@ p:target {
     background: color-mix(in srgb, var(--color-arq-amber) 22%, transparent);
     border-radius: 0.25rem;
     box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--color-arq-amber) 22%, transparent);
-    /* Doit dégager les deux en-têtes collants — celui du site et celui de l'article, qui
-       cumulent près de 145 px. Une marge plus courte faisait atterrir le paragraphe ciblé
-       derrière eux : le lien partagé menait à un passage invisible. */
-    scroll-margin-top: 11rem;
+    /* Doit dégager les en-têtes collants, dont la hauteur varie avec la longueur du titre et
+       la largeur de la fenêtre — mesurée à 145 px puis à 273 px. Une valeur fixe faisait donc
+       atterrir le paragraphe ciblé derrière eux, et le lien partagé menait à un passage
+       invisible. La mesure est publiée par ancres.js ; le repli sert avant son exécution. */
+    scroll-margin-top: calc(var(--arq-decalage-collant, 11rem) + 1.5rem);
 }
 
 /* ------------------------------------------------------------------
