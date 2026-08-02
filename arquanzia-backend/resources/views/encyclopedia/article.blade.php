@@ -45,7 +45,7 @@
 
                 <div class="flex-1">
                     <div class="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-arq-forest prose-p:text-arq-ink prose-p:leading-relaxed">
-                        {!! \App\Support\ParagraphAnchors::apply($node->article?->content_html) !!}
+                        {!! \App\Support\AuthorNoteInjector::inject(\App\Support\ParagraphAnchors::apply($node->article?->content_html), $node->authorNotes) !!}
                     </div>
                 </div>
             </div>

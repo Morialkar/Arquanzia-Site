@@ -59,6 +59,21 @@ class EncyclopediaNode extends Model
         return $this->type === 'article';
     }
 
+    /** Notes d'autrice ancrées aux paragraphes de ce texte. */
+    protected static function booted(): void
+    {
+        // Le morphisme ne peut pas porter de contrainte de clé étrangère : sans ce nettoyage,
+        // les notes d'un texte supprimé resteraient en base sans jamais réapparaître.
+        static::deleting(function ($model) {
+            $model->authorNotes()->delete();
+        });
+    }
+
+    public function authorNotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(AuthorNote::class, 'notable');
+    }
+
     public function readingTime(): \App\Support\ReadingTime
     {
         return \App\Support\ReadingTime::of($this->article?->content_md ?: $this->teaser_md);

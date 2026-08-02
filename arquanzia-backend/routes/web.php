@@ -101,6 +101,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('wikilinks', \App\Http\Controllers\Admin\WikilinkController::class)->except(['show']);
 
+        // Notes d'autrice : le type est exposé par un mot lisible, non par un nom de classe.
+        Route::get('/notes/{type}/{id}', [\App\Http\Controllers\Admin\AuthorNoteController::class, 'edit'])->name('notes.edit');
+        Route::post('/notes/{type}/{id}', [\App\Http\Controllers\Admin\AuthorNoteController::class, 'store'])->name('notes.store');
+        Route::delete('/notes/{type}/{id}/{note}', [\App\Http\Controllers\Admin\AuthorNoteController::class, 'destroy'])->name('notes.destroy');
+
         Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/audit', [\App\Http\Controllers\Admin\AuditController::class, 'index'])->name('audit.index');
 

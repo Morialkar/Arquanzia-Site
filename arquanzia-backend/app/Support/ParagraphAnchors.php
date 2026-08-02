@@ -58,6 +58,74 @@ class ParagraphAnchors
         return self::PREFIX.substr(sha1(self::normalize($text)), 0, self::HASH_LENGTH);
     }
 
+    /**
+     * Identifiants des paragraphes d'un texte rendu, sans le modifier.
+     *
+     * Sert à repérer les notes dont le paragraphe a été réécrit : leur ancrage ne figure plus
+     * dans cette liste.
+     *
+     * @return list<string>
+     */
+    public static function identifiersIn(?string $html): array
+    {
+        if ($html === null || trim($html) === '') {
+            return [];
+        }
+
+        $dom = self::parse($html);
+
+        if (! $dom) {
+            return [];
+        }
+
+        $vus = [];
+        $ids = [];
+
+        foreach (self::topLevelParagraphs($dom) as $paragraphe) {
+            $id = self::identifier($paragraphe, $vus);
+
+            if ($id !== null) {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Texte de chaque paragraphe, indexé par son identifiant.
+     *
+     * L'administration en a besoin pour proposer d'annoter un paragraphe : il faut montrer le
+     * texte, pas une empreinte.
+     *
+     * @return array<string, string>
+     */
+    public static function paragraphsIn(?string $html): array
+    {
+        if ($html === null || trim($html) === '') {
+            return [];
+        }
+
+        $dom = self::parse($html);
+
+        if (! $dom) {
+            return [];
+        }
+
+        $vus = [];
+        $paragraphes = [];
+
+        foreach (self::topLevelParagraphs($dom) as $paragraphe) {
+            $id = self::identifier($paragraphe, $vus);
+
+            if ($id !== null) {
+                $paragraphes[$id] = self::normalize($paragraphe->textContent);
+            }
+        }
+
+        return $paragraphes;
+    }
+
     private static function parse(string $html): ?DOMDocument
     {
         $previous = libxml_use_internal_errors(true);

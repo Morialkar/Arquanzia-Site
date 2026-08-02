@@ -98,6 +98,14 @@
             <button type="submit" class="bg-arq-forest text-arq-parchment px-6 py-2 rounded-lg hover:bg-arq-forest-light focus:outline-none focus:ring-2 focus:ring-arq-forest dark:focus:ring-arq-mint/70 dark:bg-arq-mint dark:text-arq-night dark:hover:bg-arq-mint/90">Enregistrer</button>
         </div>
     </form>
+    <a href="{{ route('admin.notes.edit', ['chapitre', $chapter->id]) }}"
+       class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-arq-forest dark:text-arq-mint hover:underline">
+        ✎ Notes d’autrice
+        @if($chapter->authorNotes()->count() > 0)
+            <span class="text-arq-bark/60 dark:text-arq-mint/60">({{ $chapter->authorNotes()->count() }})</span>
+        @endif
+    </a>
+
 
     <form action="{{ route('admin.chapters.destroy', [$book, $chapter]) }}" method="POST" data-confirmer="Supprimer ce chapitre ?" class="mt-4">
         @csrf
