@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Book;
 use App\Models\Chapter;
 use App\Models\EncyclopediaNode;
+use App\Models\FragmentNode;
+use App\Models\Post;
 use App\Services\FeedBuilder;
 use App\Services\SearchService;
 use App\Support\FeedSelection;
@@ -39,15 +41,31 @@ class RequeteCompteTest extends TestCase
         return $n;
     }
 
+    /**
+     * Terme présent dans tous les contenus créés.
+     *
+     * Le contenu doit être déterministe : Eloquent saute les requêtes de chargement groupé
+     * quand la collection parente est vide, si bien qu'un terme cherché dans du texte aléatoire
+     * faisait varier le compte selon les tirages — la mesure devenait instable sans que rien ne
+     * soit cassé.
+     */
+    private const TERME = 'arquanzien';
+
     /** Arborescence à trois niveaux : c'est la profondeur qui déclenchait les requêtes en trop. */
     private function ajouterDuContenu(int $n): void
     {
-        $book = Book::factory()->create();
-        Chapter::factory()->for($book)->count($n)->create();
+        $book = Book::factory()->create(['description_md' => 'Un récit '.self::TERME.'.']);
+        Chapter::factory()->for($book)->count($n)->create(['content_md' => 'Un passage '.self::TERME.'.']);
 
         $racine = EncyclopediaNode::factory()->category()->create();
         $intermediaire = EncyclopediaNode::factory()->category()->create(['parent_id' => $racine->id]);
-        EncyclopediaNode::factory()->count($n)->create(['parent_id' => $intermediaire->id]);
+        EncyclopediaNode::factory()->count($n)->create([
+            'parent_id' => $intermediaire->id,
+            'teaser_md' => 'Une entrée '.self::TERME.'.',
+        ]);
+
+        FragmentNode::factory()->count($n)->create(['description_md' => 'Un fragment '.self::TERME.'.']);
+        Post::factory()->count($n)->create(['content_full' => 'Un billet '.self::TERME.'.']);
     }
 
     private function assertNeCroitPas(callable $action, string $surface): void
@@ -78,7 +96,7 @@ class RequeteCompteTest extends TestCase
     public function test_la_recherche_ne_demande_pas_plus_de_requetes_quand_le_contenu_croit(): void
     {
         $this->assertNeCroitPas(
-            fn () => app(SearchService::class)->search('en'),
+            fn () => app(SearchService::class)->search(self::TERME),
             'de la recherche',
         );
     }
