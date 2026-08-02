@@ -760,7 +760,13 @@ body::before {
     display: block;
 }
 
-body > *:not(.arq-bg-lights):not(header) {
+/* Le décor de fond est fixe en z-index 0 : le contenu doit passer devant. Les barres de
+   navigation en sont exclues — cette règle vaut (0,1,2) en spécificité contre (0,1,0) pour une
+   classe utilitaire, si bien qu'elle écrasait le « z-50 » du <nav> de l'admin et le ramenait à
+   égalité avec <main>, qui l'emportait en venant après. Les cartes passaient devant les menus
+   déroulants, et comme elles passaient devant elles captaient le survol : le menu se refermait
+   dès que le curseur y entrait. Le <header> du site public échappait déjà à la règle. */
+body > *:not(.arq-bg-lights):not(header):not(nav) {
     position: relative;
     z-index: 1;
 }
