@@ -111,9 +111,12 @@ class BookExportService
 
     protected function normalizeOptions(array $options): array
     {
-        $font = in_array($options['font'] ?? 'standard', ['standard', 'dyslexic'], true)
-            ? $options['font']
-            : 'standard';
+        // Le repli était testé mais pas utilisé : la clé absente passait la vérification, puis
+        // la lecture échouait. Tout appel sans options explicites — generateEpub(),
+        // generatePdf(), ou le format « édition » — s'interrompait donc sur une erreur.
+        $requested = $options['font'] ?? 'standard';
+
+        $font = in_array($requested, ['standard', 'dyslexic'], true) ? $requested : 'standard';
 
         $size = (int) ($options['size'] ?? 18);
         $size = max(14, min(26, $size));

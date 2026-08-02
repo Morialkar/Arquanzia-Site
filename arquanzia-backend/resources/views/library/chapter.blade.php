@@ -13,11 +13,11 @@
                 <p class="arq-dim text-sm mb-2">{{ $book->title }}</p>
                 <h1 class="font-serif text-3xl md:text-4xl font-bold text-arq-forest">{{ $chapter->title }}</h1>
                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-arq-parchment-dark">
-                    <div id="reading-progress" class="h-full bg-arq-forest transition-all duration-100" ></div>
+                    <div id="reading-progress" data-reader-controls class="h-full bg-arq-forest transition-all duration-100" ></div>
                 </div>
             </header>
 
-            <section class="mb-8 bg-arq-parchment-dark/70 dark:bg-arq-night-card border border-arq-amber/30 dark:border-arq-emerald/20 rounded-3xl p-5 md:p-6 shadow-parchment dark:shadow-night-soft">
+            <section data-reader-controls class="mb-8 bg-arq-parchment-dark/70 dark:bg-arq-night-card border border-arq-amber/30 dark:border-arq-emerald/20 rounded-3xl p-5 md:p-6 shadow-parchment dark:shadow-night-soft">
                 <div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] arq-dim dark:text-gray-300">
                     <span class="mr-1">Confort</span>
                     <div class="flex items-center gap-2 text-base tracking-normal normal-case">

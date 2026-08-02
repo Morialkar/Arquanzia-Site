@@ -27,7 +27,14 @@
                         <a href="{{ route('download.book', ['slug' => $book->slug, 'format' => 'pdf']) }}" class="btn-arq btn-arq-secondary inline-flex items-center">
                             <span class="mr-2">📥</span> PDF
                         </a>
+                        <a href="{{ route('download.book', ['slug' => $book->slug, 'format' => 'edition']) }}" class="btn-arq btn-arq-secondary inline-flex items-center">
+                            <span class="mr-2">📖</span> Livret à relier
+                        </a>
                     </div>
+                    <p class="mt-2 text-sm arq-dim">
+                        Le livret réordonne les pages pour l’impression : imprimez recto-verso sur le
+                        bord court, pliez au centre, agrafez dans le pli.
+                    </p>
                 @endif
             </div>
         </div>

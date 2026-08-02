@@ -857,3 +857,89 @@ body > *:not(.arq-bg-lights):not(header) {
 .profondeur-5 { margin-left: 7.5rem; }
 
 .media-contenu { max-height: 70vh; }
+
+/* ------------------------------------------------------------------
+   Impression
+   ------------------------------------------------------------------
+   Sans ces règles, un Ctrl+P sur un chapitre sortait la navigation, le champ d'étoiles et le
+   pied de page, en laissant le texte dans une colonne étroite. Le site produit du texte long :
+   l'imprimer proprement fait partie de ce qu'on en attend.
+
+   Pour un livre entier relié, préférer le format « Livret à relier », qui impose les pages. */
+@media print {
+    /* Tout ce qui relève de la navigation ou de la décoration disparaît. */
+    header,
+    footer,
+    nav,
+    .arq-bg-lights,
+    #arq-parallax-blobs,
+    #arq-parallax-stars,
+    #search-container,
+    #mobile-menu,
+    .no-print,
+    .wikilink-popover,
+    [data-reader-controls] {
+        display: none !important;
+    }
+
+    /* Le texte reprend toute la page, en noir sur blanc : les fonds colorés vident les
+       cartouches d'encre sans rien apporter sur papier. */
+    html,
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    main,
+    .card-arq {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    /* Confort de lecture sur papier plutôt qu'à l'écran. */
+    #chapter-content,
+    .prose,
+    .arq-body {
+        font-size: 12pt !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Les titres ne doivent pas rester seuls en bas de page, ni les paragraphes se couper
+       sur une ligne isolée. */
+    h1, h2, h3 {
+        break-after: avoid-page;
+        page-break-after: avoid;
+    }
+
+    p, blockquote, figure {
+        orphans: 3;
+        widows: 3;
+    }
+
+    img {
+        max-width: 100% !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* L'adresse d'un lien externe est perdue sur papier : on la donne. Les liens internes,
+       eux, encombreraient le texte pour rien. */
+    a[href^="http"]::after {
+        content: ' (' attr(href) ')';
+        font-size: 9pt;
+        word-break: break-all;
+    }
+
+    /* Les ancres de paragraphe (lot C1) ne s'impriment pas. */
+    .paragraph-anchor {
+        display: none !important;
+    }
+
+    @page {
+        margin: 2cm;
+    }
+}
