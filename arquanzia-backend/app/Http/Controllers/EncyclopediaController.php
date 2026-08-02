@@ -74,11 +74,69 @@ class EncyclopediaController extends Controller
 
         return view('encyclopedia.article', [
             'node' => $node,
+            'mentions' => $this->mentionsOf($node),
             'ancestors' => $node->ancestors(),
             'ogTitle' => $node->title.' — Encyclopédie · Arquanzia',
             'ogDescription' => $ogDescription,
             'ogImage' => $ogImage,
         ]);
+    }
+
+    /**
+     * Textes publiés qui citent cette entrée.
+     *
+     * Le filtre de publication est indispensable : un brouillon qui cite une entrée
+     * trahirait son existence, et son titre, à tout visiteur.
+     *
+     * @return \Illuminate\Support\Collection<int, array{titre: string, url: string, categorie: string}>
+     */
+    protected function mentionsOf(EncyclopediaNode $node): \Illuminate\Support\Collection
+    {
+        return $node->mentionedIn()
+            // Le livre d'un chapitre est chargé avec lui : sans cela, chaque mention
+            // déclenchait sa propre requête, et le compte croissait avec le contenu.
+            ->with(['source' => fn ($morph) => $morph->morphWith([
+                \App\Models\Chapter::class => ['book'],
+            ])])
+            ->get()
+            ->map(fn ($mention) => $this->describeSource($mention->source))
+            ->filter()
+            ->sortBy('titre')
+            ->values();
+    }
+
+    /** @return array{titre: string, url: string, categorie: string}|null */
+    protected function describeSource(?object $source): ?array
+    {
+        return match (true) {
+            $source instanceof \App\Models\Chapter => $source->is_published
+                && ! $source->isComingSoon()
+                && $source->book?->is_published
+                    ? [
+                        'titre' => $source->title,
+                        'url' => route('library.chapter', [$source->book->slug, $source->slug]),
+                        'categorie' => $source->book->title,
+                    ]
+                    : null,
+
+            $source instanceof EncyclopediaNode => $source->is_published
+                ? [
+                    'titre' => $source->title,
+                    'url' => route('encyclopedia.show', $source->getFullPath()),
+                    'categorie' => 'Encyclopédie',
+                ]
+                : null,
+
+            $source instanceof \App\Models\FragmentNode => $source->is_published
+                ? [
+                    'titre' => $source->title,
+                    'url' => route('fragments.show', $source->getFullPath()),
+                    'categorie' => 'Fragments',
+                ]
+                : null,
+
+            default => null,
+        };
     }
 
     protected function resolveNodeByPath(array $segments): ?EncyclopediaNode

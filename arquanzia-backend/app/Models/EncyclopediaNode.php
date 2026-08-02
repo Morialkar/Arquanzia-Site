@@ -60,12 +60,25 @@ class EncyclopediaNode extends Model
     }
 
     /** Notes d'autrice ancrées aux paragraphes de ce texte. */
+    /** Textes qui citent cette entrée. */
+    public function mentionedIn(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Mention::class, 'target_node_id');
+    }
+
+    /** Entrées d'encyclopédie que ce texte cite. */
+    public function mentions(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Mention::class, 'source');
+    }
+
     protected static function booted(): void
     {
         // Le morphisme ne peut pas porter de contrainte de clé étrangère : sans ce nettoyage,
         // les notes d'un texte supprimé resteraient en base sans jamais réapparaître.
         static::deleting(function ($model) {
             $model->authorNotes()->delete();
+            $model->mentions()->delete();
         });
     }
 

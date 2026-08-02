@@ -81,6 +81,32 @@ class Wikilink extends Model
         return null;
     }
 
+    /**
+     * Entrée d'encyclopédie visée par un terme, s'il en vise une.
+     *
+     * Reprend la résolution de resolveTarget() mais rend le nœud lui-même, dont l'indexation
+     * des mentions a besoin. Un wikilink pointant vers une adresse libre ne vise aucune entrée
+     * et ne produit donc pas de mention.
+     */
+    public static function resolveNode(string $term): ?EncyclopediaNode
+    {
+        $wikilink = static::with('encyclopediaNode')->where('term', $term)->first();
+
+        if ($wikilink) {
+            if ($wikilink->custom_url) {
+                return null;
+            }
+
+            if ($wikilink->encyclopediaNode) {
+                return $wikilink->encyclopediaNode;
+            }
+        }
+
+        return EncyclopediaNode::where('title', $term)
+            ->orWhere('slug', Str::slug($term))
+            ->first();
+    }
+
     public static function resolveUrl(string $term): ?string
     {
         $target = static::resolveTarget($term);

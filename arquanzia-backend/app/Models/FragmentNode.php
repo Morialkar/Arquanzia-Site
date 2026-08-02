@@ -35,6 +35,22 @@ class FragmentNode extends Model
         return $this->belongsTo(FragmentNode::class, 'parent_id');
     }
 
+    protected static function booted(): void
+    {
+        // Le morphisme ne peut pas porter de contrainte de clé étrangère du côté source :
+        // sans ce nettoyage, les mentions d'un fragment supprimé resteraient en base et
+        // renverraient à un texte disparu.
+        static::deleting(function ($model) {
+            $model->mentions()->delete();
+        });
+    }
+
+    /** Entrées d'encyclopédie que ce texte cite. */
+    public function mentions(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Mention::class, 'source');
+    }
+
     public function children(): HasMany
     {
         return $this->hasMany(FragmentNode::class, 'parent_id')->orderBy('order_index');

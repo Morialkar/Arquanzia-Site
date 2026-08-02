@@ -79,6 +79,25 @@
         </div>
     </article>
 
+    @if($mentions->isNotEmpty())
+        <section class="card-arq mt-8 p-6">
+            <h2 class="font-serif text-xl font-semibold text-arq-forest dark:text-arq-mint mb-1">Mentionné dans</h2>
+            <p class="arq-dim text-sm mb-4">
+                {{ $mentions->count() }} texte{{ $mentions->count() > 1 ? 's' : '' }} évoque{{ $mentions->count() > 1 ? 'nt' : '' }} cette entrée.
+            </p>
+            <ul class="space-y-2">
+                @foreach($mentions as $mention)
+                    <li>
+                        <a href="{{ $mention['url'] }}" class="group flex items-baseline gap-2">
+                            <span class="text-xs uppercase tracking-[0.15em] text-arq-bark/50 dark:text-arq-mint/50 shrink-0">{{ $mention['categorie'] }}</span>
+                            <span class="text-arq-forest dark:text-arq-mint group-hover:underline">{{ $mention['titre'] }}</span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     <div id="lightbox" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
         <button id="lightbox-close" class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300">&times;</button>
         <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 px-2">&lsaquo;</button>
