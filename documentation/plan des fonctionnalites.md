@@ -345,3 +345,24 @@ le signalement ; l'écran d'administration est inaccessible sans session.
   sur les mêmes gabarits.
 - Toute nouvelle section publique doit être **liée depuis la navigation** — le fil est resté
   invisible des mois durant faute de ce réflexe, et un test le vérifie désormais.
+
+---
+
+## Idées écartées, et pourquoi
+
+Trois tours de propositions, dont deux largement rejetés. Consigné pour que ces idées ne
+reviennent pas : chaque refus repose sur une raison qui tient toujours.
+
+| Idée | Motif du refus |
+|---|---|
+| Chronologie de l'univers | Les dates internes restent volontairement floues jusqu'à la fin du tome 1. À reconsidérer seulement quand elles se stabiliseront. |
+| Carte cliquable des régions | Aucune carte n'existe. Suppose de produire une illustration, ce que le projet ne veut pas comme préalable technique. |
+| Graphe des wikilinks | Trop peu de contenu pour que la visualisation révèle quoi que ce soit. **Remplacée par D1**, qui exploite les mêmes données mais fonctionne dès la deuxième entrée. |
+| Marque-page de lecture | L'idée plaît, le comportement non : une position gardée en `localStorage` disparaît sans que le lecteur comprenne pourquoi — vidage du navigateur, autre appareil. Une promesse implicite que le site ne peut pas tenir. |
+| Journal de bord public | Redondant : les Chroniques existaient déjà, simplement invisibles faute de lien dans la navigation. Corrigé. |
+| Sommaire flottant | Aucune IA n'est en cause — un sommaire se construit en lisant les `<h2>` que CommonMark produit, en local. Mais les textes n'ont pas de sous-titres : il n'y a rien à sommer. |
+| Navigation séquentielle dans l'encyclopédie | La majorité des articles n'ont pas de voisinage assez structuré pour qu'un « suivant » signifie quelque chose. Un ordre affiché suggérerait une structure qui n'existe pas. |
+
+**Ce que ces refus disent du projet**, et qui doit guider les prochaines propositions : rien
+qui dépende des dates, rien qui exige de produire des illustrations, rien qui ne prenne son
+sens qu'à cent documents, et rien dont le comportement demande une explication embarrassante.
