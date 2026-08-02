@@ -186,6 +186,18 @@ class SearchTest extends TestCase
         $this->assertCount(0, $this->search('\\'));
     }
 
+    /** Le caractère d'échappement lui-même ne doit pas être interprété. */
+    public function test_le_caractere_d_echappement_est_cherchable(): void
+    {
+        EncyclopediaNode::factory()->create(['title' => 'Attention !']);
+        EncyclopediaNode::factory()->create(['title' => 'Sans ponctuation']);
+
+        $resultats = $this->search('n !');
+
+        $this->assertCount(1, $resultats);
+        $this->assertSame('Attention !', $resultats->first()['title']);
+    }
+
     public function test_la_recherche_ignore_la_casse(): void
     {
         EncyclopediaNode::factory()->create(['title' => 'Thalria']);

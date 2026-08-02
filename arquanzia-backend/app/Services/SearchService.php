@@ -124,21 +124,33 @@ class SearchService
     }
 
     /**
+     * Caractère d'échappement des jokers.
+     *
+     * Délibérément un point d'exclamation, et non l'antislash habituel : dans un littéral
+     * MySQL, l'antislash échappe lui-même le guillemet fermant, si bien que `ESCAPE '\'` est
+     * une chaîne non terminée et la requête est refusée. SQLite l'accepte pourtant — la suite
+     * de tests, qui tourne sur SQLite, passait donc au vert pendant que la production
+     * renvoyait une erreur. Un caractère sans signification particulière dans aucun des deux
+     * dialectes supprime le piège.
+     */
+    private const ESCAPE = '!';
+
+    /**
      * Compare plusieurs colonnes au terme cherché, jokers SQL neutralisés.
      */
     private function likeAny(mixed $query, array $columns, string $term): mixed
     {
         // Sans échappement, % et _ gardent leur sens de joker : chercher « % » renvoyait tout
-        // le site, et « 100% » n'importe quoi. La clause ESCAPE est nécessaire car SQLite, à
-        // la différence de MySQL, ne reconnaît aucun caractère d'échappement par défaut.
-        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term);
-        $pattern = "%{$escaped}%";
+        // le site, et « 100% » n'importe quoi.
+        $escaped = str_replace(
+            [self::ESCAPE, '%', '_'],
+            [self::ESCAPE.self::ESCAPE, self::ESCAPE.'%', self::ESCAPE.'_'],
+            $term,
+        );
 
         foreach ($columns as $i => $column) {
             $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
-            // Une chaîne PHP simple évite d'empiler les niveaux d'échappement : le SQL doit
-            // recevoir ESCAPE '\' — un seul caractère, sous peine d'être refusé.
-            $query->{$method}($column.' LIKE ? ESCAPE \'\\\'', [$pattern]);
+            $query->{$method}($column." LIKE ? ESCAPE '".self::ESCAPE."'", ["%{$escaped}%"]);
         }
 
         return $query;
