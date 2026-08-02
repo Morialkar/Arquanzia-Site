@@ -1,13 +1,12 @@
 <x-layouts.app :title="$node->title . ' - Fragments · Arquanzia'">
-    {{-- Breadcrumb --}}
-    <nav class="text-sm arq-dim mb-6 flex flex-wrap items-center gap-1">
-        <a href="{{ route('fragments.index') }}" class="hover:text-arq-forest">Fragments</a>
+    <nav aria-label="Fil d’Ariane" class="mb-6 flex flex-wrap items-center gap-2 text-sm">
+        <a href="{{ route('fragments.index') }}" class="text-arq-forest hover:text-arq-forest-light">Fragments</a>
         @foreach($ancestors as $ancestor)
-            <span>/</span>
-            <a href="{{ route('fragments.show', $ancestor->getFullPath()) }}" class="hover:text-arq-forest">{{ $ancestor->title }}</a>
+            <span class="arq-faint">›</span>
+            <a href="{{ route('fragments.show', $ancestor->getFullPath()) }}" class="text-arq-forest hover:text-arq-forest-light">{{ $ancestor->title }}</a>
         @endforeach
-        <span>/</span>
-        <span class="text-arq-forest font-medium">{{ $node->title }}</span>
+        <span class="arq-faint">›</span>
+        <span class="arq-dim">{{ $node->title }}</span>
     </nav>
 
     <h1 class="font-serif text-2xl font-bold text-arq-forest mb-6">{{ $node->title }}</h1>

@@ -1,7 +1,11 @@
 <x-layouts.app :title="$ogTitle" :description="$ogDescription" :ogImage="$ogImage">
-    <div class="mb-6">
-        <a href="{{ route('library.index') }}" class="text-arq-forest hover:text-arq-forest-light font-medium">← Retour à la Bibliothèque</a>
-    </div>
+    {{-- Fil d'Ariane plutôt qu'un simple retour : la page est atteignable depuis un flux ou
+         un moteur, où le lecteur arrive sans savoir d'où il vient. --}}
+    <nav aria-label="Fil d’Ariane" class="mb-6 flex flex-wrap items-center gap-2 text-sm">
+        <a href="{{ route('library.index') }}" class="text-arq-forest hover:text-arq-forest-light">Bibliothèque</a>
+        <span class="arq-faint">›</span>
+        <span class="arq-dim">{{ $book->title }}</span>
+    </nav>
 
     <div class="card-arq overflow-hidden">
         <div class="md:flex">

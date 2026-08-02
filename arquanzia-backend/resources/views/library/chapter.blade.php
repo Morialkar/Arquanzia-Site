@@ -1,11 +1,15 @@
 <x-layouts.app :title="$ogTitle" :description="$ogDescription" :ogImage="$ogImage">
-    <div class="mb-6 flex items-center gap-2 text-sm">
+    <nav aria-label="Fil d’Ariane" class="mb-6 flex flex-wrap items-center gap-2 text-sm">
         <a href="{{ route('library.index') }}" class="text-arq-forest hover:text-arq-forest-light">Bibliothèque</a>
         <span class="arq-faint">›</span>
-        <a href="{{ route('library.book', $book->slug) }}" class="text-arq-forest hover:text-arq-forest-light">{{ $book->title }}</a>
-        <span class="arq-faint">›</span>
+        {{-- Un livre à chapitre unique n'a pas de fiche à lui : elle redirige ici. Proposer le
+             maillon ferait un aller-retour sur place. --}}
+        @if($book->publishedChapters()->count() > 1)
+            <a href="{{ route('library.book', $book->slug) }}" class="text-arq-forest hover:text-arq-forest-light">{{ $book->title }}</a>
+            <span class="arq-faint">›</span>
+        @endif
         <span class="arq-dim">{{ $chapter->title }}</span>
-    </div>
+    </nav>
 
     <article class="card-arq">
         <div class="p-6 md:p-12 lg:px-20">

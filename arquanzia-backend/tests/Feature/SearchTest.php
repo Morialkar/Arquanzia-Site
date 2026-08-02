@@ -110,9 +110,39 @@ class SearchTest extends TestCase
         $this->assertLessThan(300, mb_strlen($extrait));
     }
 
-    public function test_un_resultat_trouve_par_le_titre_n_a_pas_besoin_d_extrait(): void
+    public function test_un_resultat_trouve_par_le_titre_montre_le_debut_du_texte(): void
     {
-        EncyclopediaNode::factory()->create(['title' => 'Thalria']);
+        // « Encyclopédie · Thalria » sans un mot de plus n'apprend rien : le lecteur doit ouvrir
+        // la page pour savoir si c'est un lieu, une personne ou une langue.
+        EncyclopediaNode::factory()->create([
+            'title' => 'Thalria',
+            'teaser_md' => 'Cité portuaire du sud, bâtie sur des pilotis.',
+        ]);
+
+        $this->assertStringContainsString(
+            'Cité portuaire',
+            $this->search('Thalria')->first()['excerpt'],
+        );
+    }
+
+    public function test_le_chapeau_prime_sur_le_corps_pour_presenter_une_entree(): void
+    {
+        // Le chapeau présente l'entrée ; l'article, lui, entre dans le sujet sans le présenter.
+        $node = EncyclopediaNode::factory()->create([
+            'title' => 'Thalria',
+            'teaser_md' => 'Cité portuaire du sud.',
+        ]);
+        EncyclopediaArticle::create([
+            'node_id' => $node->id,
+            'content_md' => 'Fondée sur la vase, elle brûla deux fois.',
+        ]);
+
+        $this->assertSame('Cité portuaire du sud.', $this->search('Thalria')->first()['excerpt']);
+    }
+
+    public function test_un_resultat_sans_texte_n_affiche_pas_d_extrait_vide(): void
+    {
+        EncyclopediaNode::factory()->create(['title' => 'Thalria', 'teaser_md' => null]);
 
         $this->assertNull($this->search('Thalria')->first()['excerpt']);
     }

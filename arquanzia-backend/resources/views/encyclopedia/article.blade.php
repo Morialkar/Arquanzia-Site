@@ -1,13 +1,13 @@
 <x-layouts.app :title="$ogTitle" :description="$ogDescription" :ogImage="$ogImage">
-    <div class="mb-6 flex items-center gap-2 text-sm">
+    <nav aria-label="Fil d’Ariane" class="mb-6 flex flex-wrap items-center gap-2 text-sm">
         <a href="{{ route('encyclopedia.index') }}" class="text-arq-forest hover:text-arq-forest-light">Encyclopédie</a>
         @foreach($ancestors as $ancestor)
-            <span class="arq-faint dark:text-arq-mint/30">›</span>
+            <span class="arq-faint">›</span>
             <a href="{{ route('encyclopedia.show', $ancestor->getFullPath()) }}" class="text-arq-forest hover:text-arq-forest-light">{{ $ancestor->title }}</a>
         @endforeach
         <span class="arq-faint">›</span>
         <span class="arq-dim dark:text-arq-mint/50">{{ $node->title }}</span>
-    </div>
+    </nav>
 
     <article class="card-arq overflow-hidden">
         <div class="p-6 md:p-10 lg:px-16">

@@ -95,6 +95,7 @@ class SearchService
                 'encyclopedia', 'Encyclopédie', $node->title,
                 route('encyclopedia.show', $node->getFullPath()),
                 $node->article?->content_md ?: $node->teaser_md, $query,
+                summary: $node->teaser_md,
             ));
     }
 
@@ -120,6 +121,7 @@ class SearchService
                 'post', 'Fil', $post->title ?: 'Sans titre',
                 route('post.show', $post),
                 $post->content_full ?: $post->preview_text, $query,
+                summary: $post->preview_text,
             ));
     }
 
@@ -166,6 +168,7 @@ class SearchService
         string $query,
         ?string $thumbnail = null,
         ?string $context = null,
+        ?string $summary = null,
     ): array {
         $inTitle = Str::contains($title, $query, ignoreCase: true);
 
@@ -176,9 +179,33 @@ class SearchService
             'context' => $context,
             'url' => $url,
             'thumbnail' => $thumbnail,
-            'excerpt' => $inTitle ? null : $this->excerpt($body, $query),
+            // Trouvé par le corps : on montre le passage, qui explique la présence du
+            // résultat. Trouvé par le titre : on montre le début du texte, faute de quoi la
+            // ligne se réduit à un lien nu et n'apprend rien sur ce qu'on va ouvrir.
+            'excerpt' => $inTitle
+                ? $this->opening($summary ?: $body)
+                : $this->excerpt($body, $query),
             'score' => $inTitle ? self::SCORE_TITLE : self::SCORE_BODY,
         ];
+    }
+
+    /**
+     * Présentation d'un résultat trouvé par son titre.
+     *
+     * Le chapeau, là où il existe, a été écrit pour introduire l'entrée ; la première phrase du
+     * corps, elle, entre dans le sujet sans le présenter.
+     */
+    private function opening(?string $body, int $length = 180): ?string
+    {
+        if (! $body) {
+            return null;
+        }
+
+        $texte = trim(preg_replace('/\s+/u', ' ', strip_tags($body)) ?? '');
+
+        // Points de suspension typographiques, comme dans excerpt() : les trois points d'ASCII
+        // de Str::limit détonneraient à côté.
+        return $texte === '' ? null : Str::limit($texte, $length, ' …');
     }
 
     /**
