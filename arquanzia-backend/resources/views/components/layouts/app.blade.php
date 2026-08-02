@@ -69,7 +69,7 @@
         </div>
         <div id="arq-parallax-stars"></div>
     </div>
-    <header class="bg-arq-parchment/95 backdrop-blur-sm border-b border-arq-amber/30 shadow-parchment sticky top-0 z-40">
+    <header data-site-header class="bg-arq-parchment/95 backdrop-blur-sm border-b border-arq-amber/30 shadow-parchment sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
             <a href="{{ route('home') }}" class="flex items-center">
                 @if($siteLogoPath)

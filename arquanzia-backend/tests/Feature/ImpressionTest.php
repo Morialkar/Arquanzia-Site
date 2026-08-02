@@ -33,9 +33,41 @@ class ImpressionTest extends TestCase
         $css = $this->feuilleConstruite();
         $bloc = substr($css, strpos($css, '@media print'));
 
-        foreach (['header', 'footer', 'arq-parallax-stars', 'data-reader-controls'] as $cible) {
+        foreach (['data-site-header', 'footer', 'arq-parallax-stars', 'data-reader-controls'] as $cible) {
             $this->assertStringContainsString($cible, $bloc, "{$cible} devrait être masqué à l’impression.");
         }
+    }
+
+    /**
+     * Masquer tous les `header` emportait aussi celui de l'article, qui porte le titre du
+     * chapitre : la page imprimée sortait sans identité. Vu en basculant les règles
+     * d'impression à l'écran, ce qu'aucune vérification de code n'aurait montré.
+     */
+    public function test_seul_l_en_tete_du_site_est_masque_pas_celui_de_l_article(): void
+    {
+        $css = $this->feuilleConstruite();
+        $bloc = substr($css, strpos($css, '@media print'));
+
+        $this->assertStringContainsString('[data-site-header]', $bloc);
+        $this->assertDoesNotMatchRegularExpression(
+            '/@media print\{[^}]*(^|[,{\s])header\s*[,{]/',
+            $bloc,
+            'Masquer tous les header emporterait le titre du chapitre.',
+        );
+    }
+
+    public function test_l_en_tete_du_site_porte_son_repere(): void
+    {
+        $this->get('/')->assertSuccessful()->assertSee('data-site-header', escape: false);
+    }
+
+    /** Sans marge, les paragraphes se collent et le texte imprimé devient un bloc. */
+    public function test_les_paragraphes_sont_espaces_a_l_impression(): void
+    {
+        $css = $this->feuilleConstruite();
+        $bloc = substr($css, strpos($css, '@media print'));
+
+        $this->assertStringContainsString('margin-bottom', $bloc);
     }
 
     /** Sans ce repère, la règle d'impression n'atteindrait pas les réglages de lecture. */

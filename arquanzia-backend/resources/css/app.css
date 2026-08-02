@@ -868,7 +868,7 @@ body > *:not(.arq-bg-lights):not(header) {
    Pour un livre entier relié, préférer le format « Livret à relier », qui impose les pages. */
 @media print {
     /* Tout ce qui relève de la navigation ou de la décoration disparaît. */
-    header,
+    [data-site-header],
     footer,
     nav,
     .arq-bg-lights,
@@ -908,6 +908,21 @@ body > *:not(.arq-bg-lights):not(header) {
         line-height: 1.5 !important;
     }
 
+    /* L'en-tête d'article reste, mais dépouillé de ses effets d'écran : il porte le titre
+       du chapitre, sans lequel la page imprimée n'a plus d'identité. */
+    article header {
+        position: static !important;
+        border-bottom: 1px solid #ccc !important;
+        margin-bottom: 1.5em !important;
+    }
+
+    /* Sans marge, les paragraphes se collent et le texte devient un bloc illisible. */
+    #chapter-content p,
+    .prose p,
+    .arq-body p {
+        margin-bottom: 0.7em !important;
+    }
+
     /* Les titres ne doivent pas rester seuls en bas de page, ni les paragraphes se couper
        sur une ligne isolée. */
     h1, h2, h3 {
@@ -926,9 +941,12 @@ body > *:not(.arq-bg-lights):not(header) {
         page-break-inside: avoid;
     }
 
-    /* L'adresse d'un lien externe est perdue sur papier : on la donne. Les liens internes,
-       eux, encombreraient le texte pour rien. */
-    a[href^="http"]::after {
+    /* L'adresse d'un lien est perdue sur papier : on la donne, mais seulement dans le corps
+       du texte. Les liens du site étant absolus, la règle appliquée partout couvrait le fil
+       d'Ariane d'adresses que personne ne recopiera. */
+    #chapter-content a[href^="http"]::after,
+    .prose a[href^="http"]::after,
+    .arq-body a[href^="http"]::after {
         content: ' (' attr(href) ')';
         font-size: 9pt;
         word-break: break-all;
