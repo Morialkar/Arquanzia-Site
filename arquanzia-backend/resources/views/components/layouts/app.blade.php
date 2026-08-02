@@ -98,6 +98,7 @@
                 <a href="{{ route('library.index') }}" class="px-3 py-2 text-sm font-medium rounded-organic-sm transition-colors {{ request()->routeIs('library.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark hover:bg-arq-parchment-dark' }}">Bibliothèque</a>
                 <a href="{{ route('encyclopedia.index') }}" class="px-3 py-2 text-sm font-medium rounded-organic-sm transition-colors {{ request()->routeIs('encyclopedia.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark hover:bg-arq-parchment-dark' }}">Encyclopédie</a>
                 <a href="{{ route('fragments.index') }}" class="px-3 py-2 text-sm font-medium rounded-organic-sm transition-colors {{ request()->routeIs('fragments.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark hover:bg-arq-parchment-dark' }}">Fragments</a>
+                <a href="{{ route('feed') }}" class="px-3 py-2 text-sm font-medium rounded-organic-sm transition-colors {{ request()->routeIs('feed') || request()->routeIs('post.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark hover:bg-arq-parchment-dark' }}">Chroniques</a>
                 <a href="https://creations-sortilege.com" target="_blank" class="px-3 py-2 text-sm font-medium rounded-organic-sm text-arq-bark hover:bg-arq-parchment-dark transition-colors">Boutique ↗</a>
 
                 <div class="flex gap-1 ml-2">
@@ -128,6 +129,7 @@
                 <a href="{{ route('library.index') }}" class="block px-3 py-2 text-sm font-medium rounded-organic-sm {{ request()->routeIs('library.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark' }}">📚 Bibliothèque</a>
                 <a href="{{ route('encyclopedia.index') }}" class="block px-3 py-2 text-sm font-medium rounded-organic-sm {{ request()->routeIs('encyclopedia.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark' }}">📖 Encyclopédie</a>
                 <a href="{{ route('fragments.index') }}" class="block px-3 py-2 text-sm font-medium rounded-organic-sm {{ request()->routeIs('fragments.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark' }}">🖼️ Fragments</a>
+                <a href="{{ route('feed') }}" class="block px-3 py-2 text-sm font-medium rounded-organic-sm {{ request()->routeIs('feed') || request()->routeIs('post.*') ? 'bg-arq-forest text-arq-parchment' : 'text-arq-bark' }}">📜 Chroniques</a>
                 <a href="https://creations-sortilege.com" target="_blank" class="block px-3 py-2 text-sm font-medium text-arq-bark">🛒 Boutique ↗</a>
                 <div class="border-t border-arq-amber/20 my-2 pt-2 flex gap-2 px-3">
                     <button type="button" class="theme-btn flex-1 py-1.5 text-xs rounded text-arq-bark transition-colors" data-theme="light">Jour</button>

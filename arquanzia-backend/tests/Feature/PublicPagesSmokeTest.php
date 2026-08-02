@@ -86,6 +86,28 @@ class PublicPagesSmokeTest extends TestCase
         $this->get(route('library.book', $book->slug, false))->assertSuccessful();
     }
 
+    /**
+     * Le fil existait, fonctionnait, était testé, figurait au sitemap et au flux RSS — et
+     * n'était lié depuis nulle part. Aucun visiteur ne pouvait y arriver.
+     */
+    public function test_chaque_section_publique_est_atteignable_depuis_la_navigation(): void
+    {
+        $html = $this->get('/')->assertSuccessful()->getContent();
+
+        foreach ([
+            'bibliothèque' => route('library.index'),
+            'encyclopédie' => route('encyclopedia.index'),
+            'fragments' => route('fragments.index'),
+            'chroniques' => route('feed'),
+        ] as $section => $url) {
+            $this->assertStringContainsString(
+                'href="'.$url.'"',
+                $html,
+                "La section {$section} n’est liée nulle part : elle est inatteignable.",
+            );
+        }
+    }
+
     public function test_une_page_inexistante_renvoie_404(): void
     {
         $this->get('/cette-page-nexiste-pas')->assertNotFound();

@@ -35,7 +35,7 @@
         }
     </style>
     <div class="text-center mb-8">
-        <h1 class="font-serif text-3xl font-bold text-arq-forest">Le Fil</h1>
+        <h1 class="font-serif text-3xl font-bold text-arq-forest">Les Chroniques</h1>
         <div class="divider-elven mt-4 max-w-xs mx-auto">❧</div>
     </div>
 
