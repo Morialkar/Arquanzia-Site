@@ -47,6 +47,10 @@ class FragmentNode extends Model
         // sans ce nettoyage, les mentions d'un fragment supprimé resteraient en base et
         // renverraient à un texte disparu.
         static::deleting(function ($model) {
+            // Même raison que pour les livres : la cascade de la base contourne les modèles,
+            // et les enfants laisseraient derrière eux mentions et notes orphelines.
+            $model->children()->get()->each->delete();
+
             $model->mentions()->delete();
         });
     }

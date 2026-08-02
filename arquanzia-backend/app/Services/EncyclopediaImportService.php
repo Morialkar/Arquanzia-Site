@@ -143,6 +143,11 @@ class EncyclopediaImportService
             DB::commit();
             $zip->close();
 
+            // L'index des mentions se reconstruit après coup, jamais pendant : un nœud qui en
+            // cite un autre créé plus tard dans le même import ne pouvait pas le résoudre, et
+            // l'index sortait incomplet sans que rien ne le signale.
+            app(MentionIndexer::class)->rebuild();
+
             return [
                 'success' => true,
                 'imported' => $this->imported,

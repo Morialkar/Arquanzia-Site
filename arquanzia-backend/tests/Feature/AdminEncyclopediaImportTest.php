@@ -95,6 +95,30 @@ class AdminEncyclopediaImportTest extends TestCase
         $this->assertSame('bestiaire', $dragon->parent->slug, 'L’article doit être rattaché à sa catégorie.');
     }
 
+    /**
+     * Un nœud peut en citer un autre créé plus tard dans le même import : l'indexation au fil
+     * de l'eau ne pouvait alors pas le résoudre, et l'index sortait incomplet en silence.
+     */
+    public function test_l_import_indexe_les_mentions_croisees(): void
+    {
+        $zip = $this->makeZip([
+            // « avant » cite « zebre », qui n'existera qu'après lui dans l'ordre alphabétique.
+            'bestiaire/avant.md' => "# Avant\n\nOn y croise le [[Zebre]].",
+            'bestiaire/zebre.md' => '# Zebre',
+        ]);
+
+        $this->actingAsAdmin()
+            ->post(route('admin.encyclopedia.import.analyze', absolute: false), ['zip_file' => $zip]);
+        $this->actingAsAdmin()
+            ->post(route('admin.encyclopedia.import.execute', absolute: false), ['conflict_mode' => 'overwrite']);
+
+        $this->assertDatabaseCount('mentions', 1);
+
+        $cible = EncyclopediaNode::where('slug', 'zebre')->first();
+        $this->assertNotNull($cible);
+        $this->assertSame(1, $cible->mentionedIn()->count());
+    }
+
     public function test_un_import_sans_analyse_prealable_est_refuse(): void
     {
         $this->actingAsAdmin()

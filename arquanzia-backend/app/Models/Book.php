@@ -38,6 +38,16 @@ class Book extends Model
         return $this->slug_locked_at !== null;
     }
 
+    protected static function booted(): void
+    {
+        // La base efface les chapitres en cascade, ce qui ne déclenche aucun événement de
+        // modèle : leurs mentions et leurs notes resteraient alors en base, rattachées à des
+        // textes disparus. On supprime donc par les modèles, pour que leurs nettoyages jouent.
+        static::deleting(function (Book $book) {
+            $book->chapters()->get()->each->delete();
+        });
+    }
+
     public function cover(): BelongsTo
     {
         return $this->belongsTo(PostMedia::class, 'cover_media_id');
