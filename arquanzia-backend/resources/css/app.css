@@ -859,6 +859,14 @@ body > *:not(.arq-bg-lights):not(header) {
 .media-contenu { max-height: 70vh; }
 
 /* Ancres de paragraphe — un passage précis peut être cité par son adresse. */
+.paragraph-anchor::after {
+    content: '¶';
+}
+
+.paragraph-anchor[data-copie]::after {
+    content: '¶ copié';
+}
+
 .paragraph-anchor {
     margin-left: 0.4em;
     opacity: 0;
@@ -878,14 +886,7 @@ p:hover > .paragraph-anchor,
     opacity: 1;
 }
 
-/* Retour de copie porté par un attribut, sans injecter de texte dans le paragraphe : celui-ci
-   servant à calculer l'empreinte, y ajouter du contenu changerait son identifiant. */
-.paragraph-anchor[data-copie]::after {
-    content: ' copié';
-    font-size: 0.8em;
-    opacity: 0.8;
-}
-
+/* Retour de copie porté par un attribut, sans injecter de texte dans le paragraphe. */
 .paragraph-anchor[data-copie] {
     opacity: 1;
 }
@@ -895,7 +896,10 @@ p:target {
     background: color-mix(in srgb, var(--color-arq-amber) 22%, transparent);
     border-radius: 0.25rem;
     box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--color-arq-amber) 22%, transparent);
-    scroll-margin-top: 6rem;
+    /* Doit dégager les deux en-têtes collants — celui du site et celui de l'article, qui
+       cumulent près de 145 px. Une marge plus courte faisait atterrir le paragraphe ciblé
+       derrière eux : le lien partagé menait à un passage invisible. */
+    scroll-margin-top: 11rem;
 }
 
 /* ------------------------------------------------------------------

@@ -125,7 +125,10 @@ class ParagraphAnchors
 
     private static function anchorLink(DOMDocument $dom, string $id): DOMElement
     {
-        $lien = $dom->createElement('a', '¶');
+        // Élément vide à dessein : le pied-de-mouche est posé par le CSS. Un nœud de texte
+        // ferait partie du paragraphe, et se retrouverait dans toute sélection copiée par un
+        // lecteur — un caractère parasite au bout de chaque citation.
+        $lien = $dom->createElement('a');
         $lien->setAttribute('href', '#'.$id);
         $lien->setAttribute('class', 'paragraph-anchor');
         $lien->setAttribute('aria-label', 'Lien vers ce paragraphe');

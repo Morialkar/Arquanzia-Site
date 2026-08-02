@@ -70,6 +70,20 @@ class ImpressionTest extends TestCase
         $this->assertStringContainsString('margin-bottom', $bloc);
     }
 
+    /**
+     * Le paragraphe visé par une adresse partagée atterrissait derrière les en-têtes collants,
+     * qui cumulent près de 145 px : le lien menait à un passage invisible.
+     */
+    public function test_la_marge_de_defilement_degage_les_en_tetes_collants(): void
+    {
+        $css = $this->feuilleConstruite();
+
+        preg_match('/p:target\{[^}]*scroll-margin-top:\s*([\d.]+)rem/', $css, $m);
+
+        $this->assertNotEmpty($m, 'p:target doit poser une marge de défilement.');
+        $this->assertGreaterThanOrEqual(10, (float) $m[1], 'La marge doit dégager les en-têtes collants.');
+    }
+
     /** Sans ce repère, la règle d'impression n'atteindrait pas les réglages de lecture. */
     public function test_les_reglages_de_lecture_portent_le_repere_d_impression(): void
     {

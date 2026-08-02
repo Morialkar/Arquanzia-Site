@@ -85,6 +85,18 @@ class ParagraphAnchorsTest extends TestCase
         $this->assertMatchesRegularExpression('/href="#p-[0-9a-f]{8}"/', $html);
     }
 
+    /**
+     * Le pied-de-mouche est posé par le CSS. En nœud de texte, il ferait partie du paragraphe
+     * et se retrouverait au bout de toute citation copiée par un lecteur.
+     */
+    public function test_l_ancre_n_ajoute_aucun_texte_au_paragraphe(): void
+    {
+        $html = ParagraphAnchors::apply('<p>Le passage cité.</p>');
+
+        $this->assertStringNotContainsString('¶', $html);
+        $this->assertStringContainsString('></a>', $html, 'L’ancre doit rester vide.');
+    }
+
     public function test_les_accents_survivent(): void
     {
         $this->assertStringContainsString('éàû œ', ParagraphAnchors::apply('<p>éàû œ</p>'));
