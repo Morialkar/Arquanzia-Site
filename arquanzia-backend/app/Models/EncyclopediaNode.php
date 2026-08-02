@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTreePath;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EncyclopediaNode extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasTreePath, HasUuids;
 
     protected $fillable = [
         'parent_id',
@@ -70,19 +71,6 @@ class EncyclopediaNode extends Model
         }
 
         return \App\Helpers\MarkdownHelper::render($this->teaser_md);
-    }
-
-    public function getFullPath(): string
-    {
-        $path = [$this->slug];
-        $node = $this;
-
-        while ($node->parent) {
-            $node = $node->parent;
-            array_unshift($path, $node->slug);
-        }
-
-        return implode('/', $path);
     }
 
     public function ancestors(): array
