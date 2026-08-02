@@ -59,6 +59,11 @@ class EncyclopediaNode extends Model
         return $this->type === 'article';
     }
 
+    public function readingTime(): \App\Support\ReadingTime
+    {
+        return \App\Support\ReadingTime::of($this->article?->content_md ?: $this->teaser_md);
+    }
+
     public function isDraft(): bool
     {
         return ! $this->is_published;

@@ -58,6 +58,14 @@ class Book extends Model
         return $this->chapters()->where('is_published', true);
     }
 
+    /** Somme des chapitres publiés : un brouillon n'allonge pas la lecture annoncée. */
+    public function readingTime(): \App\Support\ReadingTime
+    {
+        return \App\Support\ReadingTime::ofMany(
+            $this->publishedChapters()->pluck('content_md')
+        );
+    }
+
     public function getDescriptionHtmlAttribute(): ?string
     {
         if (! $this->description_md) {

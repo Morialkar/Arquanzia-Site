@@ -27,6 +27,9 @@
                     @endif
                     <div class="p-4">
                         <h2 class="font-serif font-bold text-lg text-arq-forest dark:text-arq-mint group-hover:text-arq-forest-light dark:group-hover:text-arq-mint/80">{{ $book->title }}</h2>
+                        @if(!$book->readingTime()->isEmpty())
+                            <p class="arq-dim text-xs mt-1">{{ $book->readingTime()->label() }}</p>
+                        @endif
                         @if($book->description_md)
                             <p class="arq-dim text-sm mt-2 line-clamp-2">{!! Str::limit(strip_tags($book->description_html), 100) !!}</p>
                         @endif

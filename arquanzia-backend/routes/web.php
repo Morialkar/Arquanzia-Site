@@ -33,6 +33,12 @@ Route::get('/telechargement/image/{image}', [\App\Http\Controllers\DownloadContr
     ->name('download.image');
 
 Route::get('/encyclopedie', [\App\Http\Controllers\EncyclopediaController::class, 'index'])->name('encyclopedia.index');
+// Impérativement AVANT la route attrape-tout ci-dessous, dont le motif « .* » avalerait
+// « au-hasard » et le traiterait comme le chemin d'un nœud.
+Route::get('/encyclopedie/au-hasard', [\App\Http\Controllers\EncyclopediaController::class, 'random'])
+    ->middleware('throttle:30,1')
+    ->name('encyclopedia.random');
+
 Route::get('/encyclopedie/{path}', [\App\Http\Controllers\EncyclopediaController::class, 'show'])
     ->where('path', '.*')
     ->name('encyclopedia.show');

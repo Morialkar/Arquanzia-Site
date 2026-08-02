@@ -12,6 +12,9 @@
             @endif
             <div class="p-6 md:w-full">
                 <h1 class="font-serif text-3xl font-bold text-arq-forest">{{ $book->title }}</h1>
+                @if(!$book->readingTime()->isEmpty())
+                    <p class="arq-dim text-sm mt-1">{{ $book->readingTime()->label() }}</p>
+                @endif
 
                 @if($book->description_md)
                     <div class="prose prose-sm mt-4 arq-body leading-relaxed">

@@ -12,6 +12,9 @@
             <header class="mb-10 pt-6 -mt-6 pb-6 border-b border-arq-amber/20 text-center relative sticky top-0 z-50 bg-arq-parchment">
                 <p class="arq-dim text-sm mb-2">{{ $book->title }}</p>
                 <h1 class="font-serif text-3xl md:text-4xl font-bold text-arq-forest">{{ $chapter->title }}</h1>
+                @if(!$chapter->readingTime()->isEmpty())
+                    <p class="arq-dim text-sm mt-2">{{ $chapter->readingTime()->label() }}</p>
+                @endif
                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-arq-parchment-dark">
                     <div id="reading-progress" data-reader-controls class="h-full bg-arq-forest transition-all duration-100" ></div>
                 </div>

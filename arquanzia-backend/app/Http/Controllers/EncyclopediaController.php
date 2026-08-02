@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EncyclopediaNode;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class EncyclopediaController extends Controller
@@ -17,6 +18,29 @@ class EncyclopediaController extends Controller
         return view('encyclopedia.index', [
             'nodes' => $nodes,
         ]);
+    }
+
+    /**
+     * Redirige vers une entrée tirée au sort.
+     *
+     * Redirection et non affichage direct : l'adresse finale est partageable, et surtout une
+     * page « aléatoire » servie sous une adresse fixe finirait dans le cache du navigateur et
+     * cesserait d'être aléatoire.
+     */
+    public function random(): RedirectResponse
+    {
+        $node = EncyclopediaNode::published()
+            ->articles()
+            ->inRandomOrder()
+            ->first();
+
+        // Une encyclopédie sans article publié renvoie à son index plutôt qu'à une erreur :
+        // il n'y a rien à tirer, ce n'est pas une panne.
+        if (! $node) {
+            return redirect()->route('encyclopedia.index');
+        }
+
+        return redirect()->route('encyclopedia.show', $node->getFullPath());
     }
 
     public function show(string $path): View

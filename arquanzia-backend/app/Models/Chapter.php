@@ -51,6 +51,11 @@ class Chapter extends Model
         return \App\Helpers\MarkdownHelper::render($this->content_md);
     }
 
+    public function readingTime(): \App\Support\ReadingTime
+    {
+        return \App\Support\ReadingTime::of($this->content_md);
+    }
+
     public function isComingSoon(): bool
     {
         return ! $this->is_published || ($this->published_at && $this->published_at->isFuture());

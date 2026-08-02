@@ -2,6 +2,12 @@
     <div class="text-center mb-8">
         <h1 class="font-serif text-4xl font-bold text-arq-forest dark:text-arq-mint italic">Les Archives du Monde</h1>
         <div class="divider-elven mt-4 max-w-xs mx-auto">❧</div>
+
+        @if(!$nodes->isEmpty())
+            <a href="{{ route('encyclopedia.random') }}" class="btn-arq btn-arq-secondary inline-flex items-center mt-4">
+                <span class="mr-2">🎲</span> Une entrée au hasard
+            </a>
+        @endif
     </div>
 
     @if($nodes->isEmpty())

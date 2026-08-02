@@ -13,6 +13,9 @@
         <div class="p-6 md:p-10 lg:px-16">
             <header class="mb-8">
                 <h1 class="font-serif text-3xl font-bold text-arq-forest dark:text-arq-mint">{{ $node->title }}</h1>
+                @if(!$node->readingTime()->isEmpty())
+                    <p class="arq-dim text-sm mt-2">{{ $node->readingTime()->label() }}</p>
+                @endif
             </header>
 
             <div class="space-y-6 lg:flex lg:gap-8 lg:space-y-0">
