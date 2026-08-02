@@ -55,8 +55,7 @@ class SearchService
     private function books(string $query): Collection
     {
         return Book::published()
-            ->where(fn ($q) => $q->where('title', 'LIKE', "%{$query}%")
-                ->orWhere('description_md', 'LIKE', "%{$query}%"))
+            ->where(fn ($q) => $this->likeAny($q, ['title', 'description_md'], $query))
             ->with('cover')
             ->get()
             ->map(fn (Book $book) => $this->entry(
@@ -72,8 +71,7 @@ class SearchService
     {
         return Chapter::where('is_published', true)
             ->whereHas('book', fn ($q) => $q->published())
-            ->where(fn ($q) => $q->where('title', 'LIKE', "%{$query}%")
-                ->orWhere('content_md', 'LIKE', "%{$query}%"))
+            ->where(fn ($q) => $this->likeAny($q, ['title', 'content_md'], $query))
             ->with('book:id,slug,title')
             ->get()
             ->reject(fn (Chapter $chapter) => $chapter->isComingSoon())
@@ -89,9 +87,8 @@ class SearchService
     private function encyclopedia(string $query): Collection
     {
         return EncyclopediaNode::published()
-            ->where(fn ($q) => $q->where('title', 'LIKE', "%{$query}%")
-                ->orWhere('teaser_md', 'LIKE', "%{$query}%")
-                ->orWhereHas('article', fn ($a) => $a->where('content_md', 'LIKE', "%{$query}%")))
+            ->where(fn ($q) => $this->likeAny($q, ['title', 'teaser_md'], $query)
+                ->orWhereHas('article', fn ($a) => $this->likeAny($a, ['content_md'], $query)))
             ->with('article')
             ->get()
             ->map(fn (EncyclopediaNode $node) => $this->entry(
@@ -105,8 +102,7 @@ class SearchService
     private function fragments(string $query): Collection
     {
         return FragmentNode::where('is_published', true)
-            ->where(fn ($q) => $q->where('title', 'LIKE', "%{$query}%")
-                ->orWhere('description_md', 'LIKE', "%{$query}%"))
+            ->where(fn ($q) => $this->likeAny($q, ['title', 'description_md'], $query))
             ->get()
             ->map(fn (FragmentNode $node) => $this->entry(
                 'fragment', 'Fragment', $node->title,
@@ -118,15 +114,34 @@ class SearchService
     /** @return Collection<int, array<string, mixed>> */
     private function posts(string $query): Collection
     {
-        return Post::where(fn ($q) => $q->where('title', 'LIKE', "%{$query}%")
-            ->orWhere('preview_text', 'LIKE', "%{$query}%")
-            ->orWhere('content_full', 'LIKE', "%{$query}%"))
+        return Post::where(fn ($q) => $this->likeAny($q, ['title', 'preview_text', 'content_full'], $query))
             ->get()
             ->map(fn (Post $post) => $this->entry(
                 'post', 'Fil', $post->title ?: 'Sans titre',
                 route('post.show', $post),
                 $post->content_full ?: $post->preview_text, $query,
             ));
+    }
+
+    /**
+     * Compare plusieurs colonnes au terme cherché, jokers SQL neutralisés.
+     */
+    private function likeAny(mixed $query, array $columns, string $term): mixed
+    {
+        // Sans échappement, % et _ gardent leur sens de joker : chercher « % » renvoyait tout
+        // le site, et « 100% » n'importe quoi. La clause ESCAPE est nécessaire car SQLite, à
+        // la différence de MySQL, ne reconnaît aucun caractère d'échappement par défaut.
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term);
+        $pattern = "%{$escaped}%";
+
+        foreach ($columns as $i => $column) {
+            $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
+            // Une chaîne PHP simple évite d'empiler les niveaux d'échappement : le SQL doit
+            // recevoir ESCAPE '\' — un seul caractère, sous peine d'être refusé.
+            $query->{$method}($column.' LIKE ? ESCAPE \'\\\'', [$pattern]);
+        }
+
+        return $query;
     }
 
     /** @return array<string, mixed> */

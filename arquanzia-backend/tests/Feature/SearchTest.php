@@ -161,6 +161,31 @@ class SearchTest extends TestCase
         $this->assertCount(0, $this->search('   '));
     }
 
+    /**
+     * `%` et `_` sont des jokers SQL. Sans échappement, chercher « % » renvoyait tout le site,
+     * et « 100% » n'importe quoi.
+     */
+    public function test_les_jokers_sql_sont_traites_comme_du_texte(): void
+    {
+        EncyclopediaNode::factory()->create(['title' => 'Une entrée quelconque']);
+        EncyclopediaNode::factory()->create(['title' => 'Remise de 100% sur le tome']);
+
+        $this->assertCount(0, $this->search('%'), 'Le joker ne doit pas tout ramener.');
+        $this->assertCount(0, $this->search('%%'));
+        $this->assertCount(0, $this->search('__'));
+
+        $cent = $this->search('100%');
+        $this->assertCount(1, $cent);
+        $this->assertSame('Remise de 100% sur le tome', $cent->first()['title']);
+    }
+
+    public function test_un_antislash_ne_casse_pas_la_requete(): void
+    {
+        EncyclopediaNode::factory()->create(['title' => 'Chemin']);
+
+        $this->assertCount(0, $this->search('\\'));
+    }
+
     public function test_la_recherche_ignore_la_casse(): void
     {
         EncyclopediaNode::factory()->create(['title' => 'Thalria']);
