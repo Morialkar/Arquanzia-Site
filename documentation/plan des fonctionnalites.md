@@ -44,12 +44,12 @@ gabarits de lecture, et les enchaîner évite d'y repasser quatre fois.
 
 ### Lot E — Retour des lecteurs
 
-9. **E1 — Signalement de coquille** (ex-F5) : dernier, car il ouvre le premier formulaire
-   public du site.
+9. ~~**E1 — Signalement de coquille**~~ — abandonné : ouvrait le premier formulaire public du
+   site pour un bénéfice jugé insuffisant.
 
 ---
 
-## A1 — Exposer le format « édition »
+## A1 — Exposer le format « édition » ✅ fait
 
 **Ce n'est pas une idée, c'est une réparation.** `BookExportService::imposeBooklet()` réordonne
 les pages d'un PDF pour qu'il puisse être imprimé recto-verso, plié en cahier et relié. La
@@ -77,7 +77,7 @@ refusé pour un livre non publié.
 
 ---
 
-## A2 — Feuille de style d'impression
+## A2 — Feuille de style d'impression ✅ fait
 
 **Ce que ça résout.** Aujourd'hui, un `Ctrl+P` sur un chapitre imprime la navigation, le champ
 d'étoiles et le pied de page. Le texte, lui, se retrouve dans une colonne étroite.
@@ -103,7 +103,7 @@ dans la feuille construite.
 
 ---
 
-## B1 — Temps de lecture et longueur
+## B1 — Temps de lecture et longueur ✅ fait
 
 **Ce que ça résout.** La seule question qu'un lecteur se pose avant d'ouvrir un texte long :
 est-ce que je m'engage pour cinq minutes ou pour une heure. Aujourd'hui rien ne le dit.
@@ -138,7 +138,7 @@ chapitres **publiés uniquement** ; un chapitre vide ne casse pas l'affichage.
 
 ---
 
-## B2 — Au hasard
+## B2 — Au hasard ✅ fait
 
 **Ce que ça résout.** Transforme la consultation en exploration. C'est le classique des wikis
 pour une bonne raison, et neuf entrées suffisent amplement.
@@ -165,7 +165,7 @@ n'est jamais tirée ; une encyclopédie vide redirige sans erreur.
 
 ---
 
-## C1 — Liens permanents vers un paragraphe
+## C1 — Liens permanents vers un paragraphe ✅ fait
 
 **Ce que ça résout.** Discuter d'un passage précis. Rien à sauvegarder, rien à expliquer : le
 lien fonctionne ou ne fonctionne pas.
@@ -195,7 +195,7 @@ reçoivent des identifiants distincts.
 
 ---
 
-## C2 — Commentaire d'autrice
+## C2 — Commentaire d'autrice ✅ fait
 
 **Ce que ça résout.** C'est ce que les gens qui suivent un univers en construction viennent
 chercher, et cela vaut **plus** avec peu de contenu qu'avec beaucoup. Purement éditorial :
@@ -245,7 +245,7 @@ la note détachée et signalée, sans la perdre ; supprimer un texte supprime se
 
 ---
 
-## D1 — Rétroliens « Mentionné dans »
+## D1 — Rétroliens « Mentionné dans » ✅ fait
 
 **Ce que ça résout.** Sur la page de Thalria, lister les chapitres et entrées qui la citent.
 C'est l'inverse du graphe de wikilinks, écarté comme prématuré — et bien plus utile : cela
@@ -276,7 +276,7 @@ entrée ; supprimer le texte source nettoie la table.
 
 ---
 
-## D2 — Révisions récentes
+## D2 — Révisions récentes ✅ fait
 
 **Ce que ça résout.** Le flux RSS annonce les **nouveautés**, par date de parution. Une entrée
 d'encyclopédie corrigée ou étoffée n'y apparaît jamais : personne ne sait donc qu'un texte a
@@ -304,10 +304,15 @@ Un contenu modifié apparaît ; un contenu jamais modifié depuis sa création n
 brouillon n'apparaît pas ; la page répond même sans aucune révision.
 
 ---
-## E1 — Signalement de coquille
+## E1 — Signalement de coquille ❌ abandonné
 
-**Ce que ça résout.** Pour une autrice seule qui publie au fil de l'eau, les lecteurs
-deviennent des relecteurs. Sans compte, sans commentaires publics, sans modération à tenir.
+**Abandonné.** Décision de Naomi : « plus j'y pense, moins je la veux ». Le lot ouvrait le
+premier formulaire public du site, avec la surface d'abus et les obligations de conformité qui
+vont avec, pour un bénéfice qui ne la convainquait pas. Le refus tient : ne pas le rouvrir sans
+raison nouvelle.
+
+L'idée de départ était que, pour une autrice seule publiant au fil de l'eau, les lecteurs
+deviennent des relecteurs — sans compte, sans commentaires publics, sans modération à tenir.
 
 ### Mise en œuvre
 
