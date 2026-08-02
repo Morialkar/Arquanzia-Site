@@ -4,7 +4,8 @@
 
 | Document | Statut |
 |---|---|
-| [plan de reprise.md](plan%20de%20reprise.md) | À jour — chantiers ouverts, priorisés |
+| [plan de reprise.md](plan%20de%20reprise.md) | À jour — remise en état, tous lots faits |
+| [plan des fonctionnalites.md](plan%20des%20fonctionnalites.md) | À jour — cinq ajouts retenus, à implémenter |
 | [Épics/Epic 6 RELOOKING.md](Épics/Epic%206%20RELOOKING.md) | À jour — direction artistique, c'est l'identité visuelle actuelle |
 | [Épics/Epic 3 Contenu avancé.md](Épics/Epic%203%20Contenu%20avancé.md) | Partiellement périmé — voir ci-dessous |
 
