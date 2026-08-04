@@ -75,4 +75,25 @@ class AssetPipelineTest extends TestCase
         $this->assertStringContainsString('shadow-parchment', $css);
         $this->assertStringContainsString('.dark\:bg-arq-night', $css, 'La variante sombre doit être générée.');
     }
+
+    /**
+     * Le corps de texte doit garder son rythme.
+     *
+     * Le greffon de typographie n'est pas installé : la classe « prose » ne met rien en forme
+     * d'elle-même, et le reset de Tailwind annule marges et puces. Sans les règles écrites à la
+     * main, deux paragraphes séparés par une ligne vide se collaient — le saut ne se voyait pas
+     * — et les titres se confondaient avec le texte courant.
+     */
+    public function test_le_corps_de_texte_garde_ses_marges_et_ses_puces(): void
+    {
+        $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+        $css = file_get_contents(public_path('build/'.$manifest['resources/css/app.css']['file']));
+
+        $sansEspaces = preg_replace('/\s+/', '', $css);
+
+        $this->assertStringContainsString('.prosep', $sansEspaces, 'Les paragraphes doivent être espacés.');
+        $this->assertMatchesRegularExpression('/\.prosep[^{]*\{[^}]*margin/', $sansEspaces);
+        $this->assertMatchesRegularExpression('/\.proseul[^{]*\{[^}]*list-style/', $sansEspaces);
+        $this->assertMatchesRegularExpression('/\.proseh2[^{]*\{[^}]*font-size/', $sansEspaces);
+    }
 }

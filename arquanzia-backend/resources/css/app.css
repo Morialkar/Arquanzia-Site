@@ -442,6 +442,71 @@ html.dark {
 .arq-faint { color: var(--t-faint) !important; }
 .arq-body  { color: var(--t-body)  !important; }
 .text-arq-bark, [class~="text-arq-bark"] { color: var(--t-nav); }
+/* ============================================
+   CORPS DE TEXTE
+   ============================================ */
+
+/* Le greffon @tailwindcss/typography n'est pas installé : « prose » et « prose-lg » ne portent
+   donc aucune mise en forme, pendant que le reset de Tailwind met les marges à zéro, retire les
+   puces et ramène les titres à la taille du texte courant. Tout ce qui est écrit en Markdown
+   arrivait à plat : deux paragraphes séparés par une ligne vide se collaient — le saut ne se
+   voyait pas —, un « ## » ne se distinguait plus d'une phrase, une liste perdait ses puces. La
+   feuille d'impression réparait déjà les paragraphes de son côté, sans que l'écran en profite.
+
+   Ces règles rendent au texte son rythme sans introduire de dépendance : le site n'a besoin que
+   d'une poignée d'éléments, et les couleurs de « prose » sont déjà écrites à la main plus bas. */
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose pre,
+.prose figure,
+.prose table {
+    margin-block: 1.1em;
+}
+
+/* Ni décollement en haut du conteneur, ni creux en bas. */
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.25;
+    margin-block: 1.8em 0.6em;
+}
+
+.prose h1 { font-size: 1.75em; }
+.prose h2 { font-size: 1.4em; }
+.prose h3 { font-size: 1.2em; }
+.prose h4 { font-size: 1.05em; }
+
+.prose ul,
+.prose ol { padding-left: 1.5em; }
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li { margin-block: 0.35em; }
+.prose li::marker { color: var(--color-arq-amber); }
+
+.prose blockquote {
+    padding-left: 1.1em;
+    border-left: 2px solid var(--color-arq-amber);
+    font-style: italic;
+}
+
+.prose hr {
+    margin-block: 2em;
+    border: 0;
+    border-top: 1px solid var(--color-arq-amber);
+    opacity: 0.5;
+}
+
+/* Les tailles sont toutes en em : le réglage de confort de lecture, qui agit sur la taille du
+   conteneur, entraîne l'ensemble avec lui. */
+
 .dark .prose { color: #C4B8A8; }
 .dark .prose p, .dark .prose li, .dark .prose blockquote { color: #C4B8A8; }
 .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #5FFEB0; }
