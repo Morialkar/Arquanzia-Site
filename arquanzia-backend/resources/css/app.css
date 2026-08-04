@@ -442,6 +442,14 @@ html.dark {
 .arq-faint { color: var(--t-faint) !important; }
 .arq-body  { color: var(--t-body)  !important; }
 .text-arq-bark, [class~="text-arq-bark"] { color: var(--t-nav); }
+/* En-tête épinglé d'une page de lecture : il se cale sous la barre du site plutôt que
+   derrière elle. La hauteur est mesurée au chargement — elle dépend de la largeur de la fenêtre
+   — et la valeur de repli couvre le cas où le script n'a pas encore tourné. */
+.arq-entete-lecture {
+    position: sticky;
+    top: var(--arq-decalage-site, 4.5rem);
+}
+
 /* ============================================
    CORPS DE TEXTE
    ============================================ */
@@ -518,7 +526,11 @@ html.dark {
 .dark .border-arq-copper\/30 { border-color: rgba(74, 63, 55, 0.8); }
 .dark .border-arq-copper\/40 { border-color: rgba(74, 63, 55, 1); }
 .dark .shadow-parchment { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
-header {
+/* Cette règle visait « header » sans distinction, donc aussi les en-têtes de contenu : celui
+   d'un chapitre s'épinglait à top:0, derrière celui du site, et celui d'un article
+   d'encyclopédie devenait collant alors que son balisage ne le demandait pas. L'attribut
+   restreint la mise en forme à la barre du site, seule concernée. */
+[data-site-header] {
     position: sticky !important;
     top: 0 !important;
     z-index: 40 !important;
@@ -528,7 +540,7 @@ header {
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.45) !important;
     box-shadow: 0 2px 20px rgba(90, 70, 50, 0.04) !important;
 }
-.dark header {
+.dark [data-site-header] {
     background: rgba(5, 4, 3, 0.28) !important;
     backdrop-filter: blur(24px) saturate(160%) !important;
     -webkit-backdrop-filter: blur(24px) saturate(160%) !important;

@@ -13,7 +13,7 @@
 
     <article class="card-arq">
         <div class="p-6 md:p-12 lg:px-20">
-            <header class="mb-10 pt-6 -mt-6 pb-6 border-b border-arq-amber/20 text-center relative sticky top-0 z-50 bg-arq-parchment">
+            <header class="mb-10 pt-6 -mt-6 pb-6 border-b border-arq-amber/20 text-center relative arq-entete-lecture z-50 bg-arq-parchment">
                 <p class="arq-dim text-sm mb-2">{{ $book->title }}</p>
                 <h1 class="font-serif text-3xl md:text-4xl font-bold text-arq-forest">{{ $chapter->title }}</h1>
                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-arq-parchment-dark">

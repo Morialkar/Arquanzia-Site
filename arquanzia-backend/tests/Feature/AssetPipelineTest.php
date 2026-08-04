@@ -77,6 +77,30 @@ class AssetPipelineTest extends TestCase
     }
 
     /**
+     * Les en-têtes épinglés doivent s'empiler, non se recouvrir.
+     *
+     * La mise en forme visait « header » sans distinction : l'en-tête d'un chapitre s'épinglait
+     * à top:0, donc derrière la barre du site, et celui d'un article d'encyclopédie devenait
+     * collant alors que son balisage ne le demandait pas.
+     */
+    public function test_seule_la_barre_du_site_est_epinglee_en_haut(): void
+    {
+        $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+        $css = file_get_contents(public_path('build/'.$manifest['resources/css/app.css']['file']));
+
+        $sansEspaces = preg_replace('/\s+/', '', $css);
+
+        // Le minifieur réordonne les propriétés : ne rien supposer de leur ordre.
+        $this->assertDoesNotMatchRegularExpression('/(^|[,}])header\{[^}]*position:sticky/', $sansEspaces,
+            'La mise en forme épinglée ne doit viser que la barre du site.');
+        $this->assertMatchesRegularExpression('/\[data-site-header\]\{[^}]*position:sticky/', $sansEspaces);
+        $this->assertMatchesRegularExpression(
+            '/\.arq-entete-lecture\{[^}]*top:var\(--arq-decalage-site/', $sansEspaces,
+            'Un en-tête de lecture se cale sous la barre du site, dont la hauteur est mesurée.',
+        );
+    }
+
+    /**
      * Le corps de texte doit garder son rythme.
      *
      * Le greffon de typographie n'est pas installé : la classe « prose » ne met rien en forme
